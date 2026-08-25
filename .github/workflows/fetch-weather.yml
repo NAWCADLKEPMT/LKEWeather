@@ -1,0 +1,44 @@
+name: Continuous 5-Minute METAR Sync
+
+on:
+  workflow_dispatch: # Allows you to start the loop manually
+  repository_dispatch:
+    types: [trigger-next-run]
+
+jobs:
+  sync_and_loop:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write # Required so the job has permission to trigger its next run
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Create Data Directory
+        run: mkdir -p data
+
+      - name: Fetch Weather Data
+        run: |
+          curl -s "https://aviationweather.gov/api/data/metar?ids=KWRI,KMJX&format=raw" > data/metar.txt
+
+      - name: Commit and Push Changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/metar.txt
+          # '[skip ci]' prevents GitHub from triggering a separate, redundant build
+          git commit -m "Automated weather fetch [skip ci]" || exit 0
+          git push
+
+      - name: Wait 5 Minutes
+        run: sleep 300 # Pause for 300 seconds
+
+      - name: Trigger Next Run
+        run: |
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ github.repository }}/dispatches \
+            -d '{"event_type": "trigger-next-run"}'
