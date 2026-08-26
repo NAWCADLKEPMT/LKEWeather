@@ -1,7 +1,2 @@
-<html>
-<head><title>502 Bad Gateway</title></head>
-<body>
-<center><h1>502 Bad Gateway</h1></center>
-<hr><center>Microsoft-Azure-Application-Gateway/v2</center>
-</body>
-</html>
+METAR KMJX 261356Z AUTO 00000KT 10SM CLR 23/16 A3012 RMK AO2 SLP201 T02330156 $
+METAR KWRI 261355Z AUTO 00000KT 10SM CLR 23/16 A3011 RMK AO2 SLP195 T02310159 $
