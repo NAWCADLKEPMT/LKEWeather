@@ -1,2 +1,7 @@
-METAR KMJX 261256Z AUTO 01006KT 10SM CLR 21/16 A3012 RMK AO2 SLP202 T02110161 $
-METAR KWRI 261255Z AUTO 34006KT 10SM CLR 22/16 A3011 RMK AO2 SLP195 T02190164 $
+<html>
+<head><title>502 Bad Gateway</title></head>
+<body>
+<center><h1>502 Bad Gateway</h1></center>
+<hr><center>Microsoft-Azure-Application-Gateway/v2</center>
+</body>
+</html>
