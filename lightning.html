@@ -52,8 +52,8 @@
     margin-bottom: 4px;
 }
 .legend-line {
-    border-bottom: 3px dashed;
-    width: 18px;
+    border-bottom: 5px dashed;
+    width: 25px;
     margin-right: 8px;
 }
   </style>
@@ -100,8 +100,8 @@ legend.onAdd = function (map) {
 legend.addTo(map);
 
   L.circleMarker(targetLatLng, { radius: 8, fillColor: '#00b0ff', color: '#ffffff', weight: 3, opacity: 1, fillOpacity: 1 }).addTo(map);
-  L.circle(targetLatLng, { radius: 24140.2, color: '#f87171', weight: 2, dashArray: '5, 5', fill: false }).addTo(map);
-  L.circle(targetLatLng, { radius: 48280.3, color: '#fb8c00', weight: 2, dashArray: '5, 5', fill: false }).addTo(map);
+  L.circle(targetLatLng, { radius: 24140.2, color: '#f87171', weight: 5, dashArray: '10, 10', fill: false }).addTo(map);
+  L.circle(targetLatLng, { radius: 48280.3, color: '#fb8c00', weight: 5, dashArray: '10, 10', fill: false }).addTo(map);
 
   // Unattended Kiosk Audio Context Warmup & Gesture Listener
   function initAudioContext() {
