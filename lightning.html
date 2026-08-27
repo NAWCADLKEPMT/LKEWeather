@@ -70,10 +70,11 @@
   var targetLatLng = L.latLng(LAKEHURST_LAT, LAKEHURST_LON);
   var map = L.map('map', { zoomControl: false }).setView(targetLatLng, 9);
   
-  // Rate limiting variables (in milliseconds)
+  // Cooldown & Drift Tracking
   var lastCriticalToneTime = 0;
   var lastNonCriticalToneTime = 0;
   var TONE_COOLDOWN_MS = 30000; // 30 seconds
+  var clockOffset = null; // Track local-to-server time offset dynamically
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 35,
@@ -121,12 +122,12 @@ legend.addTo(map);
       // Enforce rate limiting computed separately for critical and non-critical
       if (isCritical) {
         if (now - lastCriticalToneTime < TONE_COOLDOWN_MS) {
-          return; // Ignore if critical tone played within 30 seconds
+          return; 
         }
         lastCriticalToneTime = now;
       } else {
         if (now - lastNonCriticalToneTime < TONE_COOLDOWN_MS) {
-          return; // Ignore if non-critical tone played within 30 seconds
+          return; 
         }
         lastNonCriticalToneTime = now;
       }
@@ -158,7 +159,7 @@ legend.addTo(map);
             var now = Date.now(); 
             if (now - data.time <= STRIKE_EXPIRATION_MS) { 
               var strikePos = L.latLng(data.lat, data.lon); 
-              var marker = L.circleMarker(strikePos, { radius: 7, fillColor: '#ffea00', color: '#333333', weight: 2, opacity: 1, fillOpacity: 0.9, zIndexOffset: 1000 }).addTo(map); 
+              var marker = L.circleMarker(strikePos, { radius: 7, fillColor: '#ff0000', color: '#333333', weight: 2, opacity: 1, fillOpacity: 0.9, zIndexOffset: 1000 }).addTo(map); 
               activeStrikes.push({ lat: data.lat, lon: data.lon, dist: data.dist, time: data.time, marker: marker }); 
             } 
           }); 
@@ -254,8 +255,17 @@ legend.addTo(map);
         if (data && data.lat && data.lon) { 
           var dist = getDistanceInMiles(LAKEHURST_LAT, LAKEHURST_LON, data.lat, data.lon); 
           if (dist <= MONITOR_RADIUS_MILES) { 
-            var strikeTime = data.time ? (data.time / 1000000) : Date.now(); 
-            handleNewStrike(data.lat, data.lon, dist, strikeTime); 
+            // Compute true server time (nanoseconds converted to milliseconds)
+            var serverTime = data.time ? (data.time / 1000000) : Date.now();
+            
+            // Establish the local clock offset on first valid package to mitigate browser/server drift
+            if (clockOffset === null) {
+              clockOffset = Date.now() - serverTime;
+            }
+            
+            // Normalize the timestamp so historical data stays accurate on page refreshes
+            var adjustedTime = serverTime + clockOffset;
+            handleNewStrike(data.lat, data.lon, dist, adjustedTime); 
           } 
         } 
       } catch (err) {} 
@@ -264,6 +274,7 @@ legend.addTo(map);
     socket.onclose = function() { 
       diagStatus.textContent = 'CLSD'; 
       diagStatus.style.color = '#f87171'; 
+      clockOffset = null; // Reset offset to allow recalculation on reconnection
       setTimeout(initBlitzortungStream, 5000); 
     }; 
   }
@@ -271,8 +282,11 @@ legend.addTo(map);
     strikeCount++; 
     document.getElementById('diag-strikes').textContent = strikeCount; 
     var strikePos = L.latLng(lat, lon); 
-    var marker = L.circleMarker(strikePos, { radius: 7, fillColor: '#ffea00', color: '#333333', weight: 2, opacity: 1, fillOpacity: 0.9, zIndexOffset: 1000 }).addTo(map); 
+    
+    // Initial creation is bright red
+    var marker = L.circleMarker(strikePos, { radius: 7, fillColor: '#ff0000', color: '#333333', weight: 2, opacity: 1, fillOpacity: 0.9, zIndexOffset: 1000 }).addTo(map); 
     activeStrikes.push({ lat: lat, lon: lon, dist: distMiles, time: timestamp, marker: marker }); 
+    
     if (distMiles < 15.0) { playAlertTone(true); } 
     else if (distMiles <= 30.0) { playAlertTone(false); } 
     updateUI(); 
@@ -286,8 +300,29 @@ legend.addTo(map);
       if (age > STRIKE_EXPIRATION_MS) { 
         map.removeLayer(strike.marker); 
       } else { 
-        var opacity = 1 - (age / STRIKE_EXPIRATION_MS); 
-        strike.marker.setStyle({ fillOpacity: Math.max(0.2, opacity) }); 
+        var fadeRatio = 1 - (age / STRIKE_EXPIRATION_MS); // 1.0 (new) to 0.0 (old)
+        var inverseRatio = 1 - fadeRatio; // 0.0 (new) to 1.0 (old)
+        
+        var hue, lightness;
+        if (inverseRatio < 0.5) {
+          // Phase 1 (0 to 7.5 mins): Red (0) to Yellow (60)
+          hue = Math.floor(inverseRatio * 120); 
+          lightness = 50; 
+        } else {
+          // Phase 2 (7.5 to 15 mins): Yellow (60) stays, Lightness pushes to White (100)
+          hue = 60;
+          lightness = Math.floor(50 + ((inverseRatio - 0.5) * 100)); 
+        }
+        
+        var currentColor = 'hsl(' + hue + ', 100%, ' + lightness + '%)';
+        
+        // Apply dynamic color, border opacity, and fill opacity
+        strike.marker.setStyle({ 
+          fillColor: currentColor,
+          opacity: Math.max(0.1, fadeRatio), 
+          fillOpacity: Math.max(0.1, fadeRatio * 0.9) 
+        }); 
+        
         if (strike.dist < minDistance) { minDistance = strike.dist; } 
         validStrikes.push(strike); 
       } 
@@ -327,7 +362,8 @@ legend.addTo(map);
   }
   loadHistory(); updateRadarLayer(); initBlitzortungStream(); 
   setInterval(updateRadarLayer, 300000); 
-  setInterval(function() { updateUI(); map.invalidateSize(); }, 10000);
+  // Run update loop every 1 second to handle live fades and expiration smoothly
+  setInterval(function() { updateUI(); map.invalidateSize(); }, 1000);
 </script>
 </body>
 </html>
