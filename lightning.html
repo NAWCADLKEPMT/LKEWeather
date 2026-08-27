@@ -57,13 +57,19 @@
 }
 
 /* Doppler Ping Animation Classes */
+.doppler-container {
+    pointer-events: none;
+    background: transparent;
+}
 .doppler-ping {
-    box-sizing: border-box; /* Crucial for keeping the border inside the 60x60 dimensions */
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
     border: 3px solid #ff0000;
     border-radius: 50%;
     background-color: rgba(255, 0, 0, 0.25);
     animation: dopplerPulse 1.25s cubic-bezier(0.21, 0.53, 0.56, 0.8) infinite;
-    pointer-events: none; /* Prevents the invisible box from stealing mouse clicks */
+    pointer-events: none; 
 }
 @keyframes dopplerPulse {
     0% { transform: scale(0.2); opacity: 1; }
@@ -307,7 +313,13 @@ legend.addTo(map);
     
     // Trigger visual Doppler Ping and Audio ONLY if it's a genuinely new real-time strike
     if (playPing) {
-        var pingIcon = L.divIcon({ className: 'doppler-ping', iconSize: [60, 60], iconAnchor: [30, 30] });
+        // Wrap the animated div inside a static container so Leaflet's transform coordinates are not overwritten
+        var pingIcon = L.divIcon({ 
+            className: 'doppler-container', 
+            html: '<div class="doppler-ping"></div>', 
+            iconSize: [60, 60], 
+            iconAnchor: [30, 30] 
+        });
         var pingMarker = L.marker(strikePos, { icon: pingIcon, interactive: false }).addTo(map);
         
         // Remove ping after exactly 10 seconds
