@@ -518,7 +518,7 @@
         currentFetchController = new AbortController();
         var signal = currentFetchController.signal;
 
-        var targetUrl = 'https://nawcadlkepmt.github.io/LKEWeather/data/metar.txt';
+        var targetUrl = 'https://metar-worker.ericvkline.workers.dev/';
 
         fetch(targetUrl, { signal: signal, cache: 'no-store' })
             .then(function(response) {
