@@ -55,6 +55,20 @@
     width: 25px;
     margin-right: 8px;
 }
+
+/* Doppler Ping Animation Classes */
+.doppler-ping {
+    box-sizing: border-box; /* Crucial for keeping the border inside the 60x60 dimensions */
+    border: 3px solid #ff0000;
+    border-radius: 50%;
+    background-color: rgba(255, 0, 0, 0.25);
+    animation: dopplerPulse 1.25s cubic-bezier(0.21, 0.53, 0.56, 0.8) infinite;
+    pointer-events: none; /* Prevents the invisible box from stealing mouse clicks */
+}
+@keyframes dopplerPulse {
+    0% { transform: scale(0.2); opacity: 1; }
+    100% { transform: scale(1.6); opacity: 0; }
+}
   </style>
 </head>
 <body>
@@ -265,7 +279,11 @@ legend.addTo(map);
             
             // Normalize the timestamp so historical data stays accurate on page refreshes
             var adjustedTime = serverTime + clockOffset;
-            handleNewStrike(data.lat, data.lon, dist, adjustedTime); 
+            
+            // Do not fire the doppler ping for old, backfilled history strikes (older than 10 seconds)
+            var isActuallyNew = (Date.now() - adjustedTime) < 10000;
+            
+            handleNewStrike(data.lat, data.lon, dist, adjustedTime, isActuallyNew); 
           } 
         } 
       } catch (err) {} 
@@ -278,7 +296,7 @@ legend.addTo(map);
       setTimeout(initBlitzortungStream, 5000); 
     }; 
   }
-  function handleNewStrike(lat, lon, distMiles, timestamp) { 
+  function handleNewStrike(lat, lon, distMiles, timestamp, playPing) { 
     strikeCount++; 
     document.getElementById('diag-strikes').textContent = strikeCount; 
     var strikePos = L.latLng(lat, lon); 
@@ -287,8 +305,20 @@ legend.addTo(map);
     var marker = L.circleMarker(strikePos, { radius: 7, fillColor: '#ff0000', color: '#333333', weight: 2, opacity: 1, fillOpacity: 0.9, zIndexOffset: 1000 }).addTo(map); 
     activeStrikes.push({ lat: lat, lon: lon, dist: distMiles, time: timestamp, marker: marker }); 
     
-    if (distMiles < 15.0) { playAlertTone(true); } 
-    else if (distMiles <= 30.0) { playAlertTone(false); } 
+    // Trigger visual Doppler Ping and Audio ONLY if it's a genuinely new real-time strike
+    if (playPing) {
+        var pingIcon = L.divIcon({ className: 'doppler-ping', iconSize: [60, 60], iconAnchor: [30, 30] });
+        var pingMarker = L.marker(strikePos, { icon: pingIcon, interactive: false }).addTo(map);
+        
+        // Remove ping after exactly 10 seconds
+        setTimeout(function() {
+            if (map.hasLayer(pingMarker)) { map.removeLayer(pingMarker); }
+        }, 10000);
+        
+        if (distMiles < 15.0) { playAlertTone(true); } 
+        else if (distMiles <= 30.0) { playAlertTone(false); } 
+    }
+    
     updateUI(); 
   }
   function updateUI() { 
