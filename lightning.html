@@ -3,7 +3,6 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
@@ -66,25 +65,26 @@
 </div>
 <div id="diagnostics">WS: <span id="diag-status" style="color: #fb8c00;">INIT</span> | Svr: <span id="diag-server" class="diag-val">-</span> | Msgs: <span id="diag-msgs" class="diag-val">0</span> | Strikes: <span id="diag-strikes" class="diag-val" style="color: #fb8c00;">0</span> | Err: <span id="diag-error" style="color: #4ade80;">None</span></div>
 <script>
-  var LAKEHURST_LAT = 40.02382476361223; var LAKEHURST_LON = -74.39343607864961; var MONITOR_RADIUS_MILES = 30; var STRIKE_EXPIRATION_MS = 900000; 
+  var LAKEHURST_LAT = 40.02382476361223; var LAKEHURST_LON = -74.39343607864961; var MONITOR_RADIUS_MILES = 40; var STRIKE_EXPIRATION_MS = 900000; 
   var activeStrikes = new Array(); var socket = null; var radarLayer = null; var messageCount = 0; var strikeCount = 0; var currentServerIndex = 1; var wasVisible = false; var audioCtx = null;
   var targetLatLng = L.latLng(LAKEHURST_LAT, LAKEHURST_LON);
   var map = L.map('map', { zoomControl: false }).setView(targetLatLng, 9);
   
+  // Rate limiting variables (in milliseconds)
+  var lastCriticalToneTime = 0;
+  var lastNonCriticalToneTime = 0;
+  var TONE_COOLDOWN_MS = 30000; // 30 seconds
+
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 35,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 }).addTo(map);
-
 var legend = L.control({position: 'bottomright'});
-
 legend.onAdd = function (map) {
     var div = L.DomUtil.create('div', 'info legend');
     var distances = [30, 15]; // The radii in miles
     var colors = ['#fb8c00', '#f87171']; // Colors for 30mi and 15mi respectively
-
     div.innerHTML += '<div>Legend</div>';
-
     // Loop through our distances and generate a label with a colored line for each
     for (var i = 0; i < distances.length; i++) {
         div.innerHTML +=
@@ -93,16 +93,12 @@ legend.onAdd = function (map) {
               '<span>' + distances[i] + '-Mile Radius</span>' +
             '</div>';
     }
-
     return div;
 };
-
 legend.addTo(map);
-
   L.circleMarker(targetLatLng, { radius: 8, fillColor: '#00b0ff', color: '#ffffff', weight: 3, opacity: 1, fillOpacity: 1 }).addTo(map);
   L.circle(targetLatLng, { radius: 24140.2, color: '#f87171', weight: 5, dashArray: '10, 10', fill: false }).addTo(map);
   L.circle(targetLatLng, { radius: 48280.3, color: '#fb8c00', weight: 5, dashArray: '10, 10', fill: false }).addTo(map);
-
   // Unattended Kiosk Audio Context Warmup & Gesture Listener
   function initAudioContext() {
     if (!audioCtx) {
@@ -113,7 +109,6 @@ legend.addTo(map);
       audioCtx.resume();
     }
   }
-
   // Attempt automatic initialization and bind global click/touch unlock triggers
   window.addEventListener('load', function() { initAudioContext(); });
   window.addEventListener('click', function() { initAudioContext(); }, { once: true });
@@ -121,9 +116,23 @@ legend.addTo(map);
   
   function playAlertTone(isCritical) { 
     try { 
+      var now = Date.now();
+      
+      // Enforce rate limiting computed separately for critical and non-critical
+      if (isCritical) {
+        if (now - lastCriticalToneTime < TONE_COOLDOWN_MS) {
+          return; // Ignore if critical tone played within 30 seconds
+        }
+        lastCriticalToneTime = now;
+      } else {
+        if (now - lastNonCriticalToneTime < TONE_COOLDOWN_MS) {
+          return; // Ignore if non-critical tone played within 30 seconds
+        }
+        lastNonCriticalToneTime = now;
+      }
+
       initAudioContext();
       if (!audioCtx || audioCtx.state !== 'running') return;
-
       var osc = audioCtx.createOscillator(); 
       var gain = audioCtx.createGain(); 
       osc.connect(gain); 
@@ -134,13 +143,11 @@ legend.addTo(map);
       setTimeout(function() { osc.stop(); osc.disconnect(); gain.disconnect(); }, isCritical ? 500 : 250); 
     } catch (e) {} 
   }
-
   function saveHistory() { 
     var historyData = new Array(); 
     activeStrikes.forEach(function(strike) { historyData.push({ lat: strike.lat, lon: strike.lon, dist: strike.dist, time: strike.time }); }); 
     localStorage.setItem('xiboStrikeHistory', JSON.stringify(historyData)); 
   }
-
   function loadHistory() { 
     var saved = localStorage.getItem('xiboStrikeHistory'); 
     if (saved) { 
@@ -162,7 +169,6 @@ legend.addTo(map);
       } catch (e) {} 
     } 
   }
-
   function updateRadarLayer() { 
     fetch('https://api.rainviewer.com/public/weather-maps.json')
       .then(function(res) { return res.json(); })
@@ -174,7 +180,6 @@ legend.addTo(map);
       })
       .catch(function(err) {}); 
   }
-
   function getDistanceInMiles(lat1, lon1, lat2, lon2) { 
     var R = 3958.8; 
     var dLat = (lat2 - lat1) * Math.PI / 180; 
@@ -183,11 +188,9 @@ legend.addTo(map);
     var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); 
     return R * c; 
   }
-
   function getProp(obj, key) { var desc = Object.getOwnPropertyDescriptor(obj, key); return desc ? desc.value : undefined; }
   function setProp(obj, key, val) { Object.defineProperty(obj, key, { value: val, writable: true, configurable: true, enumerable: true }); }
   function hasProp(obj, key) { return Object.getOwnPropertyDescriptor(obj, key) !== undefined; }
-
   function decodeLZW(compressedString) { 
     var dictionary = new Object(); 
     var currChar = compressedString.charAt(0); 
@@ -211,7 +214,6 @@ legend.addTo(map);
     } 
     return out.join(""); 
   }
-
   function initBlitzortungStream() { 
     var diagStatus = document.getElementById('diag-status'); 
     var diagServer = document.getElementById('diag-server'); 
@@ -226,14 +228,12 @@ legend.addTo(map);
     diagServer.textContent = 'ws' + serverNum; 
     diagStatus.textContent = 'CONN'; 
     diagStatus.style.color = '#fb8c00'; 
-
     if (socket) { 
       try { 
         socket.onopen = null; socket.onmessage = null; socket.onerror = null; socket.onclose = null;
         socket.close(); 
       } catch(e) {} 
     } 
-
     socket = new WebSocket(serverUrl); 
     socket.onopen = function() { 
       diagStatus.textContent = 'OPEN'; 
@@ -267,7 +267,6 @@ legend.addTo(map);
       setTimeout(initBlitzortungStream, 5000); 
     }; 
   }
-
   function handleNewStrike(lat, lon, distMiles, timestamp) { 
     strikeCount++; 
     document.getElementById('diag-strikes').textContent = strikeCount; 
@@ -278,7 +277,6 @@ legend.addTo(map);
     else if (distMiles <= 30.0) { playAlertTone(false); } 
     updateUI(); 
   }
-
   function updateUI() { 
     var now = Date.now(); 
     var minDistance = Infinity; 
@@ -296,7 +294,6 @@ legend.addTo(map);
     }); 
     activeStrikes = validStrikes; 
     saveHistory(); 
-
     var containerEl = document.getElementById('container'); 
     var hasStrikes = activeStrikes.length > 0; 
     if (hasStrikes) { 
@@ -311,26 +308,23 @@ legend.addTo(map);
       containerEl.classList.add('layout-clear'); 
       wasVisible = false; 
     } 
-
     var banner = document.getElementById('status-banner'); 
     var title = document.getElementById('banner-title'); 
     var subtext = document.getElementById('time-val'); 
     var timeString = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }); 
     banner.className = ''; 
-
     if (minDistance !== Infinity) { 
       title.textContent = 'NEAREST STRIKE: ' + minDistance.toFixed(1) + ' MILES'; 
-      subtext.textContent = activeStrikes.length + ' strike(s) in last 15 mins within 30 mi | Updated ' + timeString; 
+      subtext.textContent = activeStrikes.length + ' strike(s) in last 15 mins within 40 mi | Updated ' + timeString; 
       if (minDistance < 15.0) { banner.classList.add('status-warning'); } 
       else if (minDistance <= 30.0) { banner.classList.add('status-caution'); } 
       else { banner.classList.add('status-clear'); } 
     } else { 
       title.textContent = 'NO RECENT LIGHTNING STRIKES DETECTED'; 
-      subtext.textContent = 'All clear within 30 miles of Lakehurst, NJ | Connected live at ' + timeString; 
+      subtext.textContent = 'All clear within 40 miles of Lakehurst, NJ | Connected live at ' + timeString; 
       banner.classList.add('status-clear'); 
     } 
   }
-
   loadHistory(); updateRadarLayer(); initBlitzortungStream(); 
   setInterval(updateRadarLayer, 300000); 
   setInterval(function() { updateUI(); map.invalidateSize(); }, 10000);
