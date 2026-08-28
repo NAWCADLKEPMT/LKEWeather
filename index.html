@@ -94,4 +94,21 @@
    </div>
   </div>
  </body>
+<script>
+    (function setupIdleRefresh() {
+      const IDLE_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
+      let hiddenStartTime = null;
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+          hiddenStartTime = Date.now();
+        } else {
+          if (hiddenStartTime && (Date.now() - hiddenStartTime >= IDLE_TIMEOUT)) {
+            window.location.reload();
+          }
+          hiddenStartTime = null;
+        }
+      });
+    })();
+  </script>
 </html>
