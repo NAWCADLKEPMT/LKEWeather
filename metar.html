@@ -520,7 +520,17 @@
 
         var targetUrl = 'https://metar-worker.nawcadlkepmt.workers.dev/';
 
-        fetch(targetUrl, { signal: signal, cache: 'no-store' })
+        // Add custom key header or query parameter
+        var apiKey = 'hkY^h&%yu787@$HdfDG';
+
+        fetch(targetUrl, { 
+                signal: signal, 
+                cache: 'no-store',
+                headers: {
+                    'X-API-Key': apiKey,
+                    // 'Authorization': 'Bearer ' + apiKey
+                }
+            })
             .then(function(response) {
                 if (!response.ok) throw new Error("HTTP " + response.status);
                 return response.text();
