@@ -319,6 +319,12 @@
                 p.windSpd = parseInt(wArr.shift(), 10);
                 var gstStr = wArr.shift();
                 p.windGst = gstStr ? parseInt(gstStr.substring(1), 10) : 0;
+                var unit = wArr.shift();
+                /* Always display in knots */
+                if (unit === 'MPS') {
+                    p.windSpd = Math.round(p.windSpd * 1.94384);
+                    if (p.windGst) p.windGst = Math.round(p.windGst * 1.94384);
+                }
                 if (dir === '000' && p.windSpd === 0) p.windStr = 'Calm';
                 else {
                     p.windStr = (dir === 'VRB' ? 'VRB' : dir + '°') + ' at ' + p.windSpd + ' kts';
