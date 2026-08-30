@@ -3,11 +3,8 @@
  <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- iPhone Retina (180x180) -->
-<link rel="apple-touch-icon" sizes="180x180" href="/Icons/logo180.png">
-
-<!-- iPad Pro / iPad (152x152 or 167x167) -->
-<link rel="apple-touch-icon" sizes="152x152" href="/Icons/logo152.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/Icons/logo180.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="/Icons/logo152.png">
   
   <title>LKE Aviation Dashboard</title>
   <style>
@@ -35,6 +32,7 @@
  
     .pane {
         width: 100%;
+        height: 100%;
         border-radius: 8px;
         overflow: hidden;
         box-shadow: 0 4px 6px rgba(0,0,0,0.3);
@@ -50,11 +48,11 @@
         transition: height 0.3s ease;
     }
  
-    /* Lower Content Grid */
+    /* Lower Content Grid: TAF on left, Radar in middle, Flight tracking on right */
     .main-content-grid {
         flex: 1;
         display: grid;
-        grid-template-columns: 640px 1fr;
+        grid-template-columns: 840px 640px 1fr;
         grid-template-rows: 1fr;
         gap: 12px;
         min-height: 0;
@@ -67,15 +65,32 @@
         display: block;
     }
  
-    /* Portrait & Narrow Breakpoints */
-    @media screen and (max-width: 1100px), screen and (max-aspect-ratio: 1/1), (orientation: portrait) {
+    /* Mobile & Narrow Breakpoints: Vertical stack with page scrolling */
+    @media screen and (max-width: 1550px), screen and (max-aspect-ratio: 1/1), (orientation: portrait) {
+        html, body {
+            overflow: auto !important;
+            height: auto !important;
+        }
+
+        .dashboard-container {
+            height: auto !important;
+            overflow: visible !important;
+        }
+
         .metar-pane {
-            height: 180px !important; /* Forces expansion for 2-line layout */
+            height: 180px !important;
+            flex-shrink: 0;
         }
  
         .main-content-grid {
-            grid-template-columns: 1fr;
-            grid-template-rows: 1fr 1fr;
+            display: flex;
+            flex-direction: column;
+            height: auto !important;
+        }
+
+        .pane {
+            height: 450px;
+            flex-shrink: 0;
         }
     }
 </style>
@@ -84,25 +99,75 @@
   <div class="dashboard-container">
    <!-- Top METAR Panel -->
    <div class="pane metar-pane">
-    <iframe src="metar.html" title="METAR Display"></iframe>
+    <iframe id="metar-frame" src="metar.html" title="METAR Display"></iframe>
    </div>
    <!-- Main Viewports Grid -->
    <div class="main-content-grid">
-    <!-- NOAA Radar Pane -->
+    <!-- Left Column: Full-Height TAF Panel -->
     <div class="pane">
-     <!-- <iframe src="https://radar.weather.gov/?settings=v1_eyJhZ2VuZGEiOnsiaWQiOiJsb2NhbCIsImNlbnRlciI6Wy03NC40MTEsMzkuOTQ3XSwibG9jYXRpb24iOm51bGwsInpvb20iOjcuOTc2Mzg1OTI3NjQyMDE2LCJmaWx0ZXIiOiJXU1ItODhEIiwibGF5ZXIiOiJzcl9icmVmIiwic3RhdGlvbiI6IktESVgifSwiYW5pbWF0aW5nIjp0cnVlLCJiYXNlIjoic3RhbmRhcmQiLCJhcnRjYyI6ZmFsc2UsImNvdW50eSI6dHJ1ZSwiY3dhIjpmYWxzZSwicmZjIjpmYWxzZSwic3RhdGUiOnRydWUsIm1lbnUiOnRydWUsInNob3J0RnVzZWRPbmx5Ijp0cnVlLCJvcGFjaXR5Ijp7ImFsZXJ0cyI6MC4zMywibG9jYWwiOjAuODIsImxvY2FsU3RhdGlvbnMiOjAsIm5hdGlvbmFsIjowLjZ9fQ%3D%3D" title="NOAA Radar Viewport"></iframe> -->
-     <iframe src="https://radar.weather.gov/?settings=v1_eyJhZ2VuZGEiOnsiaWQiOiJuYXRpb25hbCIsImNlbnRlciI6Wy03NC43MjUsNDAuMTY1XSwibG9jYXRpb24iOm51bGwsInpvb20iOjcuODU4MjEyNTg3NTk4NzUzLCJsYXllciI6ImJyZWZfcWNkIn0sImFuaW1hdGluZyI6dHJ1ZSwiYmFzZSI6InN0YW5kYXJkIiwiYXJ0Y2MiOmZhbHNlLCJjb3VudHkiOnRydWUsImN3YSI6ZmFsc2UsInJmYyI6ZmFsc2UsInN0YXRlIjp0cnVlLCJtZW51Ijp0cnVlLCJzaG9ydEZ1c2VkT25seSI6dHJ1ZSwib3BhY2l0eSI6eyJhbGVydHMiOjAuOCwibG9jYWwiOjAuNiwibG9jYWxTdGF0aW9ucyI6MC44LCJuYXRpb25hbCI6MC44OX19" title="NOAA Radar Viewport"></iframe>
+        <iframe id="taf-frame" src="taf.html" title="KWRI TAF Forecast Table"></iframe>
     </div>
-    <!-- Lightning & Traffic Pane -->
+    <!-- Middle Column: Radar Viewport -->
+    <div class="pane">
+        <iframe src="https://radar.weather.gov/?settings=v1_eyJhZ2VuZGEiOnsiaWQiOiJuYXRpb25hbCIsImNlbnRlciI6Wy03NC43MjUsNDAuMTY1XSwibG9jYXRpb24iOm51bGwsInpvb20iOjcuODU4MjEyNTg3NTk4NzUzLCJsYXllciI6ImJyZWZfcWNkIn0sImFuaW1hdGluZyI6dHJ1ZSwiYmFzZSI6InN0YW5kYXJkIiwiYXJ0Y2MiOmZhbHNlLCJjb3VudHkiOmZhbHNlLCJjd2EiOmZhbHNlLCJyZmMiOmZhbHNlLCJzdGF0ZSI6dHJ1ZSwibWVudSI6dHJ1ZSwic2hvcnRGdXNlZE9ubHkiOnRydWUsIm9wYWNpdHkiOnsiYWxlcnRzIjowLjgsImxvY2FsIjowLjYsImxvY2FsU3RhdGlvbnMiOjAuOCwibmF0aW9uYWwiOjAuODl9fQ%3D%3D" title="NOAA Radar Viewport"></iframe>
+    </div>
+    <!-- Right Column: Lightning & Traffic Pane -->
     <div class="pane">
      <iframe src="lightning.html" title="Lightning &amp; Traffic Viewport"></iframe>
     </div>
    </div>
   </div>
- </body>
-<script>
+
+  <script>
+    // Single Centralized Fetch (Called on Load and Every 5 Minutes)
+    async function fetchWeatherOnce() {
+        const targetUrl = 'https://metar-worker.nawcadlkepmt.workers.dev/';
+        const apiKey = 'hkY^h&%yu787@$HdfDG';
+
+        try {
+            const response = await fetch(targetUrl, { 
+                cache: 'no-store',
+                headers: { 'X-API-Key': apiKey }
+            });
+            if (!response.ok) throw new Error("HTTP " + response.status);
+            const payload = await response.json();
+            
+            // Save payload to local storage
+            localStorage.setItem('cached_weather_payload', JSON.stringify({
+                timestamp: Date.now(),
+                data: payload
+            }));
+
+            // Broadcast payload to child iframes (metar.html & taf.html)
+            broadcastWeatherData(payload);
+        } catch (err) {
+            console.error("Central fetch failed:", err);
+            broadcastWeatherData(null);
+        }
+    }
+
+    function broadcastWeatherData(payload) {
+        const metarFrame = document.getElementById('metar-frame');
+        const tafFrame = document.getElementById('taf-frame');
+
+        if (metarFrame && metarFrame.contentWindow) {
+            metarFrame.contentWindow.postMessage({ type: 'WEATHER_DATA', payload }, '*');
+        }
+        if (tafFrame && tafFrame.contentWindow) {
+            tafFrame.contentWindow.postMessage({ type: 'WEATHER_DATA', payload }, '*');
+        }
+    }
+
+    // Initial fetch when page loads
+    window.addEventListener('DOMContentLoaded', () => {
+        fetchWeatherOnce();
+        
+        // Refresh weather data every 5 minutes (300,000 ms)
+        setInterval(fetchWeatherOnce, 300000);
+    });
+
     (function setupIdleRefresh() {
-      const IDLE_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
+      const IDLE_TIMEOUT = 5 * 60 * 1000;
       let hiddenStartTime = null;
 
       document.addEventListener("visibilitychange", () => {
@@ -117,4 +182,5 @@
       });
     })();
   </script>
+ </body>
 </html>
