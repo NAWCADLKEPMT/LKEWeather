@@ -519,28 +519,27 @@
         var signal = currentFetchController.signal;
 
         var targetUrl = 'https://metar-worker.nawcadlkepmt.workers.dev/';
-
-        // Add custom key header or query parameter
         var apiKey = 'hkY^h&%yu787@$HdfDG';
 
         fetch(targetUrl, { 
                 signal: signal, 
                 cache: 'no-store',
                 headers: {
-                    'X-API-Key': apiKey,
-                    // 'Authorization': 'Bearer ' + apiKey
+                    'X-API-Key': apiKey
                 }
             })
             .then(function(response) {
                 if (!response.ok) throw new Error("HTTP " + response.status);
-                return response.text();
+                return response.json();
             })
-            .then(function(data) {
-                if (!data || data.trim().length === 0) {
-                    throw new Error("Received empty METAR data");
+            .then(function(payload) {
+                var metarData = payload && payload.metar ? payload.metar : null;
+
+                if (!metarData || metarData.trim().length === 0) {
+                    throw new Error("Received empty METAR data from payload.");
                 }
 
-                var lines = data.split('\n');
+                var lines = metarData.split('\n');
                 var kwriLine = lines.find(line => line.includes('KWRI'));
                 var kmjxLine = lines.find(line => line.includes('KMJX'));
 
