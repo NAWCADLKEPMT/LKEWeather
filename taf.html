@@ -30,7 +30,8 @@
             overflow-x: auto;
             overflow-y: hidden;
             display: flex;
-            align-items: stretch;
+            /* Content-sized cards — never stretch to fill the iframe (avoids height feedback loop) */
+            align-items: center;
             gap: 5px;
             padding: 5px 6px;
             /* Hide scrollbar — scroll via touch / trackpad / wheel */
@@ -64,7 +65,8 @@
             border: 1px solid #ced4da;
             box-sizing: border-box;
             position: relative;
-            min-height: 0;
+            height: auto;
+            min-height: 100px;
             box-shadow: 0 1px 2px rgba(0,0,0,0.06);
             overflow: hidden;
             z-index: 0;
@@ -78,8 +80,7 @@
             .hours-scroll {
                 padding: 6px 6px;
                 gap: 5px;
-                /* Allow vertical room for full card content */
-                align-items: stretch;
+                align-items: center;
             }
             .hour-card {
                 /* ~5 cards visible — closer to the wide-screen card proportions */
@@ -88,9 +89,9 @@
                 min-width: calc((100% - 20px) / 5);
                 max-width: calc((100% - 20px) / 5);
                 padding: 6px 5px 6px;
-                /* Prefer content height over forced clipping */
-                min-height: 118px;
-                justify-content: space-evenly;
+                height: auto;
+                min-height: 110px;
+                justify-content: space-between;
             }
             .h-time { font-size: 14px; }
             .h-cat  { font-size: 13px; padding: 2px 6px; }
@@ -429,6 +430,7 @@
 
         if (!overallStart || !overallEnd) {
             strip.innerHTML = '<div class="error-msg">Could not parse TAF time frame</div>';
+            reportHeightToParent();
             return;
         }
 
@@ -500,24 +502,34 @@
             loopMs += hourInMs;
         }
 
-        /* Tell parent how tall the strip needs to be so mobile can grow instead of clipping */
+        /* One stable height report after cards paint (content-sized, not stretch-based) */
         requestAnimationFrame(function () {
-            reportHeightToParent();
+            requestAnimationFrame(function () {
+                reportHeightToParent();
+            });
         });
     }
+
+    var _lastReportedHeight = 0;
 
     function reportHeightToParent() {
         try {
             var strip = document.getElementById('hours-strip');
             if (!strip) return;
-            /* Measure the tallest card + vertical padding */
+            /* Measure intrinsic card height only — cards must NOT stretch with the iframe */
             var cards = strip.querySelectorAll('.hour-card');
+            if (!cards.length) return;
             var maxCard = 0;
             for (var i = 0; i < cards.length; i++) {
-                maxCard = Math.max(maxCard, cards[i].scrollHeight);
+                maxCard = Math.max(maxCard, cards[i].offsetHeight);
             }
-            var pad = 12; /* .hours-scroll vertical padding */
-            var needed = Math.max(maxCard + pad, strip.scrollHeight, 110);
+            var styles = window.getComputedStyle(strip);
+            var pad = (parseFloat(styles.paddingTop) || 0) + (parseFloat(styles.paddingBottom) || 0);
+            var needed = Math.ceil(maxCard + pad + 2);
+            if (needed < 100) needed = 100;
+            /* Only notify parent when the value actually changes (breaks feedback loops) */
+            if (Math.abs(needed - _lastReportedHeight) < 3) return;
+            _lastReportedHeight = needed;
             if (window.parent && window.parent !== window) {
                 window.parent.postMessage({ type: 'TAF_HEIGHT', height: needed }, '*');
             }
@@ -667,10 +679,16 @@
 
     checkCachedData();
 
-    /* Re-report after orientation / viewport changes */
+    /* Re-report only on real viewport/orientation changes, not on our own height updates */
+    var _lastViewportW = window.innerWidth;
     window.addEventListener('resize', function () {
+        var w = window.innerWidth;
+        /* Ignore pure height changes caused by the parent resizing our iframe */
+        if (Math.abs(w - _lastViewportW) < 2) return;
+        _lastViewportW = w;
+        _lastReportedHeight = 0; /* force a fresh report after layout change */
         clearTimeout(window._tafHTimer);
-        window._tafHTimer = setTimeout(reportHeightToParent, 150);
+        window._tafHTimer = setTimeout(reportHeightToParent, 200);
     });
 </script>
 </body>
