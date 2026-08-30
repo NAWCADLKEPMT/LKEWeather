@@ -53,8 +53,10 @@
     /* Horizontal TAF strip directly under METAR — compact light theme */
     .taf-pane {
         height: 118px;
+        min-height: 118px;
         flex-shrink: 0;
         background-color: #e9ecef;
+        transition: height 0.15s ease;
     }
  
     /* Lower Content Grid: Radar | Lightning/Traffic */
@@ -96,7 +98,9 @@
         }
 
         .taf-pane {
-            height: 110px !important;
+            /* Grows via postMessage from taf.html when content needs more room */
+            height: 130px !important;
+            min-height: 130px !important;
             flex-shrink: 0;
         }
  
@@ -178,6 +182,20 @@
             tafFrame.contentWindow.postMessage({ type: 'WEATHER_DATA', payload }, '*');
         }
     }
+
+    /* Let the TAF strip request more vertical space when card content would clip */
+    window.addEventListener('message', function (event) {
+        if (!event.data || event.data.type !== 'TAF_HEIGHT') return;
+        var pane = document.querySelector('.taf-pane');
+        if (!pane) return;
+        var needed = Math.ceil(Number(event.data.height) || 0);
+        if (needed < 100) return;
+        /* Cap so radar/lightning still get room on short phones */
+        var maxH = Math.floor(window.innerHeight * 0.28);
+        var h = Math.min(Math.max(needed, 118), maxH);
+        pane.style.height = h + 'px';
+        pane.style.minHeight = h + 'px';
+    });
 
     // Initial fetch when page loads
     window.addEventListener('DOMContentLoaded', () => {
