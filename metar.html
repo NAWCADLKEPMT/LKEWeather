@@ -195,7 +195,6 @@
     var container = document.getElementById('metar-container');
     var globalObsDate = new Date();
     var marqueeTimeout = null;
-    var currentFetchController = null;
     var previousCategory = null;
     var flashTimeout = null;
 
@@ -491,7 +490,6 @@
         }
     }
 
-    // This helper function extracts a Date object from a raw METAR string
     function getMetarDate(rawLine) {
         if (!rawLine) return null;
         var match = rawLine.match(/\b(\d{2})(\d{2})(\d{2})Z\b/);
@@ -505,93 +503,74 @@
         var year = now.getUTCFullYear();
         var month = now.getUTCMonth();
 
-        if (day > now.getUTCDate() + 5) { // Handle month rollover
+        if (day > now.getUTCDate() + 5) {
             month -= 1;
         }
         return new Date(Date.UTC(year, month, day, hr, min));
     }
 
-    function fetchLiveMetar() {
-        if (currentFetchController) {
-            currentFetchController.abort();
+    // --- BROADCAST RECEIVER & CACHE FALLBACK --- //
+
+    window.addEventListener('message', function(event) {
+        if (event.data && event.data.type === 'WEATHER_DATA') {
+            handleWorkerPayload(event.data.payload);
         }
-        currentFetchController = new AbortController();
-        var signal = currentFetchController.signal;
+    });
 
-        var targetUrl = 'https://metar-worker.nawcadlkepmt.workers.dev/';
-        var apiKey = 'hkY^h&%yu787@$HdfDG';
-
-        fetch(targetUrl, { 
-                signal: signal, 
-                cache: 'no-store',
-                headers: {
-                    'X-API-Key': apiKey
-                }
-            })
-            .then(function(response) {
-                if (!response.ok) throw new Error("HTTP " + response.status);
-                return response.json();
-            })
-            .then(function(payload) {
-                var metarData = payload && payload.metar ? payload.metar : null;
-
-                if (!metarData || metarData.trim().length === 0) {
-                    throw new Error("Received empty METAR data from payload.");
-                }
-
-                var lines = metarData.split('\n');
-                var kwriLine = lines.find(line => line.includes('KWRI'));
-                var kmjxLine = lines.find(line => line.includes('KMJX'));
-
-                var kwriDate = getMetarDate(kwriLine);
-                var kmjxDate = getMetarDate(kmjxLine);
-                var twoHoursMs = 2 * 60 * 60 * 1000;
-                var now = Date.now();
-
-                // Check KWRI data first
-                if (kwriDate && (now - kwriDate.getTime()) <= twoHoursMs) {
-                    console.log("Using recent KWRI data.");
-                    initializeMetarParser(kwriLine);
-                    return;
-                }
-
-                // If KWRI is stale or missing, check KMJX
-                if (kmjxDate && (now - kmjxDate.getTime()) <= twoHoursMs) {
-                    console.log("KWRI is stale. Using fallback KMJX data.");
-                    initializeMetarParser(kmjxLine);
-                    return;
-                }
-
-                // If both are stale or missing, use the most recent one available
-                if (kwriDate && kmjxDate) {
-                    console.warn("Both KWRI and KMJX are stale. Using the most recent of the two.");
-                    initializeMetarParser(kwriDate > kmjxDate ? kwriLine : kmjxLine);
-                } else if (kwriLine) {
-                    console.warn("Only stale KWRI data available.");
-                    initializeMetarParser(kwriLine);
-                } else if (kmjxLine) {
-                    console.warn("Only stale KMJX data available.");
-                    initializeMetarParser(kmjxLine);
-                } else {
-                    throw new Error("No valid METAR lines found for KWRI or KMJX.");
-                }
-            })
-            .catch(function(err) {
-                if (err.name === 'AbortError') return;
-                console.error("Error in fetch logic:", err);
-                showOfflineState();
-            });
+    function checkCachedData() {
+        var cached = localStorage.getItem('cached_weather_payload');
+        if (cached) {
+            try {
+                var parsed = JSON.parse(cached);
+                handleWorkerPayload(parsed.data);
+            } catch(e) {}
+        }
     }
 
-    // Initialize the fetches and intervals
-    fetchLiveMetar();
+    function handleWorkerPayload(payload) {
+        var metarData = payload && payload.metar ? payload.metar : null;
+
+        if (!metarData || metarData.trim().length === 0) {
+            showOfflineState();
+            return;
+        }
+
+        var lines = metarData.split('\n');
+        var kwriLine = lines.find(function(line) { return line.includes('KWRI'); });
+        var kmjxLine = lines.find(function(line) { return line.includes('KMJX'); });
+
+        var kwriDate = getMetarDate(kwriLine);
+        var kmjxDate = getMetarDate(kmjxLine);
+        var twoHoursMs = 2 * 60 * 60 * 1000;
+        var now = Date.now();
+
+        if (kwriDate && (now - kwriDate.getTime()) <= twoHoursMs) {
+            initializeMetarParser(kwriLine);
+            return;
+        }
+
+        if (kmjxDate && (now - kmjxDate.getTime()) <= twoHoursMs) {
+            initializeMetarParser(kmjxLine);
+            return;
+        }
+
+        if (kwriDate && kmjxDate) {
+            initializeMetarParser(kwriDate > kmjxDate ? kwriLine : kmjxLine);
+        } else if (kwriLine) {
+            initializeMetarParser(kwriLine);
+        } else if (kmjxLine) {
+            initializeMetarParser(kmjxLine);
+        } else {
+            showOfflineState();
+        }
+    }
+
+    // Initialize tickers and check local storage cache
     if (window.metarTickerInterval) clearInterval(window.metarTickerInterval);
     updateTickers();
     window.metarTickerInterval = setInterval(updateTickers, 10000);
 
-    if (window.metarDataRefresh) clearInterval(window.metarDataRefresh);
-    window.metarDataRefresh = setInterval(fetchLiveMetar, 300000); // Refreshes every 5 minutes
+    checkCachedData();
 </script>
-
 </body>
 </html>
