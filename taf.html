@@ -10,207 +10,220 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #f8fafc;
+            background-color: #e9ecef;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             box-sizing: border-box;
+            color: #212529;
         }
 
-        .table-container {
+        .strip-container {
             width: 100%;
             height: 100%;
-            overflow-y: auto;
-            box-sizing: border-box;
-            background-color: #f8fafc;
-            -ms-overflow-style: none;  
-            scrollbar-width: none;  
-        }
-
-        .table-container::-webkit-scrollbar {
-            display: none;
-        }
-
-        table.taf-table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-            font-size: 17px;
-        }
-
-        table.taf-table thead {
-            display: none;
-        }
-
-        table.taf-table td {
-            padding: 0;
-            border-bottom: 1px solid #e2e8f0;
-            color: #1e293b;
-        }
-
-        table.taf-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        table.taf-table tr:nth-child(even) {
-            background-color: rgba(0, 0, 0, 0.02);
-        }
-        
-        .row-wrapper {
-            padding: 8px 14px;
-        }
-        
-        /* Primary Row: 3 Equal Columns (Ensures Center Alignment) */
-        .primary-info {
             display: flex;
-            align-items: center;
-            width: 100%;
-            font-weight: 600;
+            align-items: stretch;
+            box-sizing: border-box;
+            background: #e9ecef;
         }
 
-        .time-cell {
+        .hours-scroll {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            align-items: stretch;
+            gap: 5px;
+            padding: 5px 6px;
+        }
+
+        /* Hour card — expands equally so ≤16 fit with no scroll */
+        .hour-card {
             flex: 1 1 0;
-            text-align: left;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 5px 4px 4px;
+            border-radius: 5px;
+            background: #ffffff;
+            border: 1px solid #ced4da;
+            box-sizing: border-box;
+            position: relative;
+            min-height: 0;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+            overflow: hidden;
+            z-index: 0;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .hour-card > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Category tints (clear weather) */
+        .hour-card.bg-vfr  { background-color: #e8f5e9; border-color: #a5d6a7; }
+        .hour-card.bg-mvfr { background-color: #e3f2fd; border-color: #90caf9; }
+        .hour-card.bg-ifr  { background-color: #ffebee; border-color: #ef9a9a; }
+        .hour-card.bg-lifr { background-color: #fce4ec; border-color: #f48fb1; }
+
+        /* ---------- Static themed weather backgrounds (SVG data-URIs, no animation) ---------- */
+
+        /* RAIN — soft blue with static diagonal rain lines */
+        .hour-card.wx-rain {
+            background-color: #b8d4e8;
+            border-color: #5a9bb8;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cline x1='4' y1='0' x2='0' y2='16' stroke='%234a90b8' stroke-width='1.6' stroke-opacity='0.45'/%3E%3Cline x1='14' y1='0' x2='10' y2='16' stroke='%234a90b8' stroke-width='1.6' stroke-opacity='0.4'/%3E%3Cline x1='24' y1='0' x2='20' y2='16' stroke='%234a90b8' stroke-width='1.6' stroke-opacity='0.5'/%3E%3Cline x1='34' y1='0' x2='30' y2='16' stroke='%234a90b8' stroke-width='1.6' stroke-opacity='0.35'/%3E%3Cline x1='9' y1='18' x2='5' y2='34' stroke='%234a90b8' stroke-width='1.6' stroke-opacity='0.4'/%3E%3Cline x1='19' y1='18' x2='15' y2='34' stroke='%234a90b8' stroke-width='1.6' stroke-opacity='0.45'/%3E%3Cline x1='29' y1='18' x2='25' y2='34' stroke='%234a90b8' stroke-width='1.6' stroke-opacity='0.35'/%3E%3Cline x1='39' y1='18' x2='35' y2='34' stroke='%234a90b8' stroke-width='1.6' stroke-opacity='0.4'/%3E%3C/svg%3E");
+            background-size: 28px 28px;
+        }
+
+        /* THUNDERSTORM — amber base + static lightning bolt watermark */
+        .hour-card.wx-ts {
+            background-color: #f0c98a;
+            border-color: #c47820;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cpath d='M34 6 L18 34 L28 34 L24 58 L48 26 L36 26 Z' fill='%23a05010' fill-opacity='0.28'/%3E%3Cline x1='6' y1='8' x2='2' y2='22' stroke='%23604020' stroke-width='1.4' stroke-opacity='0.25'/%3E%3Cline x1='16' y1='4' x2='12' y2='18' stroke='%23604020' stroke-width='1.4' stroke-opacity='0.2'/%3E%3Cline x1='52' y1='10' x2='48' y2='24' stroke='%23604020' stroke-width='1.4' stroke-opacity='0.22'/%3E%3Cline x1='10' y1='40' x2='6' y2='54' stroke='%23604020' stroke-width='1.4' stroke-opacity='0.2'/%3E%3Cline x1='56' y1='38' x2='52' y2='52' stroke='%23604020' stroke-width='1.4' stroke-opacity='0.22'/%3E%3C/svg%3E");
+            background-size: 48px 48px;
+            background-position: 70% 60%;
+        }
+
+        /* SNOW — cool blue with static soft flakes */
+        .hour-card.wx-snow {
+            background-color: #c8e0f0;
+            border-color: #6aa8d0;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Ccircle cx='10' cy='8' r='2.2' fill='%23ffffff' fill-opacity='0.85'/%3E%3Ccircle cx='28' cy='6' r='1.6' fill='%23ffffff' fill-opacity='0.7'/%3E%3Ccircle cx='40' cy='14' r='2' fill='%23ffffff' fill-opacity='0.8'/%3E%3Ccircle cx='6' cy='24' r='1.8' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='22' cy='22' r='2.4' fill='%23ffffff' fill-opacity='0.9'/%3E%3Ccircle cx='38' cy='28' r='1.5' fill='%23ffffff' fill-opacity='0.7'/%3E%3Ccircle cx='14' cy='38' r='2' fill='%23ffffff' fill-opacity='0.8'/%3E%3Ccircle cx='32' cy='40' r='1.7' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='44' cy='42' r='1.4' fill='%23ffffff' fill-opacity='0.65'/%3E%3C/svg%3E");
+            background-size: 36px 36px;
+        }
+
+        /* FOG / MIST / HAZE — gray with soft horizontal bands */
+        .hour-card.wx-fog {
+            background-color: #d0d5da;
+            border-color: #8e969e;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='40' viewBox='0 0 80 40'%3E%3Cellipse cx='20' cy='10' rx='28' ry='7' fill='%23ffffff' fill-opacity='0.55'/%3E%3Cellipse cx='55' cy='18' rx='32' ry='8' fill='%23ffffff' fill-opacity='0.4'/%3E%3Cellipse cx='30' cy='30' rx='30' ry='6' fill='%23ffffff' fill-opacity='0.5'/%3E%3C/svg%3E");
+            background-size: 70px 35px;
+        }
+
+        /* OTHER (dust, sand, smoke, etc.) — warm dusty texture */
+        .hour-card.wx-other {
+            background-color: #e0d8c8;
+            border-color: #a89878;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='8' cy='10' r='1.2' fill='%23807050' fill-opacity='0.25'/%3E%3Ccircle cx='22' cy='6' r='0.9' fill='%23807050' fill-opacity='0.2'/%3E%3Ccircle cx='34' cy='14' r='1.1' fill='%23807050' fill-opacity='0.22'/%3E%3Ccircle cx='12' cy='24' r='1' fill='%23807050' fill-opacity='0.18'/%3E%3Ccircle cx='28' cy='22' r='1.3' fill='%23807050' fill-opacity='0.25'/%3E%3Ccircle cx='6' cy='34' r='0.8' fill='%23807050' fill-opacity='0.2'/%3E%3Ccircle cx='20' cy='32' r='1.1' fill='%23807050' fill-opacity='0.22'/%3E%3Ccircle cx='36' cy='36' r='0.9' fill='%23807050' fill-opacity='0.18'/%3E%3C/svg%3E");
+            background-size: 32px 32px;
+        }
+
+        /* TEMPO / PROB */
+        .hour-card.tempo {
+            border-width: 2px;
+            border-color: #d4920a;
+            box-shadow: inset 0 0 0 1px rgba(212,146,10,0.3);
+        }
+        .hour-card.tempo::after {
+            content: attr(data-tempo);
+            position: absolute;
+            top: 2px;
+            right: 4px;
+            font-size: 11px;
+            font-weight: 800;
+            color: #8a5a00;
+            letter-spacing: -0.2px;
+            line-height: 1;
+            z-index: 3;
+        }
+
+        /* Typography — sized for expanded cards (up to 16 across) */
+        .h-time {
+            font-size: 15px;
             font-weight: 700;
             color: #b45309;
             white-space: nowrap;
+            line-height: 1.1;
         }
 
-        .rules-cell {
-            flex: 1 1 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .wind-cell {
-            flex: 1 1 0;
-            text-align: right;
-            white-space: nowrap;
-        }
-
-        /* Secondary Row: Tightly Packed with Controlled Gaps */
-        .secondary-info {
-            display: flex;
-            align-items: baseline;
-            gap: 14px;
-            margin-top: 5px;
-            font-size: 0.88em;
-            color: #475569;
-            flex-wrap: wrap;
-        }
-
-        .vis-item {
-            flex: 0 0 auto;
-            white-space: nowrap;
-        }
-
-        .clouds-item {
-            flex: 1 1 auto;
-            min-width: 120px;
-        }
-
-        .wx-item {
-            flex: 0 0 auto;
-            white-space: nowrap;
-        }
-        
-        .tempo-row {
-            background-color: rgba(245, 158, 11, 0.08) !important;
-        }
-
-        .tempo-label {
-            color: #d97706;
-            font-size: 0.8em;
+        .h-cat {
+            font-size: 14px;
             font-weight: 800;
+            letter-spacing: 0.3px;
+            padding: 2px 7px;
+            border-radius: 3px;
+            margin: 2px 0 0;
+            line-height: 1.25;
+            min-width: 40px;
+            text-align: center;
+            color: #ffffff;
+            border: 1px solid rgba(0,0,0,0.12);
+        }
+        .cat-vfr  { background: #28a745; }
+        .cat-mvfr { background: #007bff; }
+        .cat-ifr  { background: #dc3545; }
+        .cat-lifr { background: #d63384; }
+
+        .h-wind {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            line-height: 1;
+            margin: 2px 0 0;
+        }
+        .wind-arrow {
+            font-size: 20px;
+            color: #212529;
+            line-height: 1;
+            display: inline-block;
+            transform-origin: center center;
+        }
+        .wind-spd {
+            font-size: 15px;
+            font-weight: 700;
+            color: #212529;
+            white-space: nowrap;
+        }
+        .wind-gst {
+            font-size: 12px;
+            color: #dc3545;
+            font-weight: 700;
         }
 
-        .highlight-wx {
-            color: #e11d48;
+        .h-bottom {
+            font-size: 13px;
+            color: #343a40;
+            white-space: nowrap;
+            line-height: 1.2;
+            text-align: center;
+            margin-top: 2px;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
             font-weight: 600;
         }
-        
-        /* Flight Category Badges */
-        .cat-badge {
-            padding: 3px 10px;
-            border-radius: 6px;
-            font-weight: 800;
-            font-size: 0.82em;
-            text-align: center;
-            display: inline-block;
-            min-width: 50px;
+        .low-ceil, .low-vis { color: #c82333; font-weight: 800; }
+
+        .loading-msg, .error-msg {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            font-size: 15px;
         }
-        .cat-vfr { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-        .cat-mvfr { background-color: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
-        .cat-ifr { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-        .cat-lifr { background-color: #fae8ff; color: #86198f; border: 1px solid #f5d0fe; }
+        .error-msg { color: #dc3545; }
     </style>
 </head>
 <body>
-
-<div class="table-container">
-    <table class="taf-table">
-        <thead>
-            <tr>
-                <th>Time</th>
-                <th>Rules</th>
-                <th>Winds</th>
-                <th>Visibility</th>
-                <th>Clouds</th>
-                <th>Weather</th>
-            </tr>
-        </thead>
-        <tbody id="taf-table-body">
-            <tr>
-                <td colspan="6" style="text-align: center; color: #64748b; padding: 20px;">Loading hourly forecast...</td>
-            </tr>
-        </tbody>
-    </table>
+<div class="strip-container">
+    <div class="hours-scroll" id="hours-strip">
+        <div class="loading-msg">Loading forecast…</div>
+    </div>
 </div>
 
 <script>
-    var wxTypes = {
-        'DZ': 'Drizzle', 'RA': 'Rain', 'SN': 'Snow', 'SG': 'Snow Grains',
-        'IC': 'Ice Crystals', 'PL': 'Sleet', 'GR': 'Hail', 'GS': 'Small Hail',
-        'UP': 'Unknown Precipitation', 'BR': 'Mist', 'FG': 'Fog', 'FU': 'Smoke',
-        'VA': 'Volcanic Ash', 'DU': 'Widespread Dust', 'SA': 'Sand', 'HZ': 'Haze',
-        'PY': 'Spray', 'PO': 'Dust Whirls', 'SQ': 'Squalls', 'FC': 'Funnel Cloud',
-        'SS': 'Sandstorm', 'DS': 'Duststorm'
-    };
-
-    var wxDescriptors = {
-        'MI': 'Shallow', 'PR': 'Partial', 'BC': 'Patches of', 'DR': 'Low Drifting',
-        'BL': 'Blowing', 'SH': 'Showers of', 'TS': 'Thunderstorms with', 'FZ': 'Freezing'
-    };
-
-    function decodeWxCode(code) {
-        var intensity = "";
-        if (code.startsWith('-')) { intensity = "Light "; code = code.substring(1); }
-        else if (code.startsWith('+')) { intensity = "Heavy "; code = code.substring(1); }
-        else if (code.startsWith('VC')) { intensity = "Nearby "; code = code.substring(2); }
-
-        var desc = "";
-        for (var key in wxDescriptors) {
-            if (code.startsWith(key)) {
-                desc = wxDescriptors[key] + " ";
-                code = code.substring(key.length);
-                break;
-            }
-        }
-
-        var mainWx = [];
-        for (var i = 0; i < code.length; i += 2) {
-            var pair = code.substring(i, i + 2);
-            if (wxTypes[pair]) mainWx.push(wxTypes[pair]);
-        }
-
-        return intensity + desc + (mainWx.length > 0 ? mainWx.join(" & ") : code);
-    }
-
     function formatLocalHour(dateObj) {
-        var hours = dateObj.getHours();
-        var ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12;
-        hours = hours ? hours : 12;
-        return hours + ':00 ' + ampm;
+        var h = dateObj.getHours();
+        var ampm = h >= 12 ? 'p' : 'a';
+        h = h % 12;
+        h = h ? h : 12;
+        return h + ampm;
     }
 
     function parseTafTimestamp(dayStr, hourStr, minStr) {
@@ -218,48 +231,55 @@
         var day = parseInt(dayStr, 10);
         var hr = parseInt(hourStr, 10);
         var min = minStr ? parseInt(minStr, 10) : 0;
-
         var year = now.getUTCFullYear();
         var month = now.getUTCMonth();
-
-        if (day > now.getUTCDate() + 15) { month -= 1; } 
-        else if (day < now.getUTCDate() - 15) { month += 1; }
-
+        if (day > now.getUTCDate() + 15) month -= 1;
+        else if (day < now.getUTCDate() - 15) month += 1;
         var dt = new Date(Date.UTC(year, month, day, 0, min, 0, 0));
-        dt.setUTCHours(hr); 
+        dt.setUTCHours(hr);
         return dt;
     }
 
     function createBlock(type, start, end) {
-        return { 
-            type: type, start: start, end: end, 
-            wind: '', vis: '', clouds: [], wx: [], 
-            rawVis: null, rawCeil: null 
+        return {
+            type: type, start: start, end: end,
+            wind: '', windDir: null, windSpd: null, windGst: null,
+            vis: '', clouds: [], wx: [],
+            rawVis: null, rawCeil: null
         };
+    }
+
+    /* Classify significant weather for static themed background */
+    function classifyWx(wxCodes) {
+        if (!wxCodes || !wxCodes.length) return null;
+        var joined = wxCodes.join(' ').toUpperCase();
+        if (/TS|SQ|FC/.test(joined)) return 'ts';
+        if (/SN|SG|IC|PL|GR|GS/.test(joined)) return 'snow';
+        if (/RA|DZ|UP|SH/.test(joined)) return 'rain';
+        if (/FG|BR|HZ|FU|VA/.test(joined)) return 'fog';
+        if (/DU|SA|SS|DS|PO|PY/.test(joined)) return 'other';
+        return 'other';
     }
 
     function parseAndDecodeTaf(rawText) {
         if (!rawText) return;
-
         var tokens = rawText.trim().split(/\s+/);
-        var overallStart = null;
-        var overallEnd = null;
+        var overallStart = null, overallEnd = null;
         var blocks = [];
         var currentBlock = null;
 
         for (var i = 0; i < tokens.length; i++) {
             var t = tokens[i];
-            var prevToken = i > 0 ? tokens[i-1] : '';
+            var prevToken = i > 0 ? tokens[i - 1] : '';
+
+            if (t === 'TAF' || t === 'TAFAMD' || t === 'TAFCOR') continue;
+            if (/^[A-Z]{4}$/.test(t) && !overallStart) continue;
 
             if (prevToken === 'BECMG' && /^\d{4}\/\d{4}$/.test(t)) {
                 var bRange = t.split('/');
-                var bStart = parseTafTimestamp(bRange[0].substring(0,2), bRange[0].substring(2,4));
-                
+                var bStart = parseTafTimestamp(bRange[0].substring(0, 2), bRange[0].substring(2, 4));
                 for (var b = blocks.length - 1; b >= 0; b--) {
-                    if (blocks[b].type === 'BASE') {
-                        blocks[b].end = bStart;
-                        break;
-                    }
+                    if (blocks[b].type === 'BASE') { blocks[b].end = bStart; break; }
                 }
                 currentBlock = createBlock('BASE', bStart, overallEnd);
                 blocks.push(currentBlock);
@@ -268,9 +288,8 @@
 
             if ((prevToken === 'TEMPO' || prevToken.startsWith('PROB')) && /^\d{4}\/\d{4}$/.test(t)) {
                 var timeRange = t.split('/');
-                var stDt = parseTafTimestamp(timeRange[0].substring(0,2), timeRange[0].substring(2,4));
-                var endDt = parseTafTimestamp(timeRange[1].substring(0,2), timeRange[1].substring(2,4));
-                
+                var stDt = parseTafTimestamp(timeRange[0].substring(0, 2), timeRange[0].substring(2, 4));
+                var endDt = parseTafTimestamp(timeRange[1].substring(0, 2), timeRange[1].substring(2, 4));
                 currentBlock = createBlock(prevToken, stDt, endDt);
                 blocks.push(currentBlock);
                 continue;
@@ -278,22 +297,17 @@
 
             if (!overallStart && /^\d{4}\/\d{4}$/.test(t)) {
                 var validRange = t.split('/');
-                overallStart = parseTafTimestamp(validRange[0].substring(0,2), validRange[0].substring(2,4));
-                overallEnd = parseTafTimestamp(validRange[1].substring(0,2), validRange[1].substring(2,4));
-                
+                overallStart = parseTafTimestamp(validRange[0].substring(0, 2), validRange[0].substring(2, 4));
+                overallEnd = parseTafTimestamp(validRange[1].substring(0, 2), validRange[1].substring(2, 4));
                 currentBlock = createBlock('BASE', overallStart, overallEnd);
                 blocks.push(currentBlock);
                 continue;
             }
 
             if (t.startsWith('FM') && /^\d{6}$/.test(t.substring(2))) {
-                var fmDt = parseTafTimestamp(t.substring(2,4), t.substring(4,6), t.substring(6,8));
-                
+                var fmDt = parseTafTimestamp(t.substring(2, 4), t.substring(4, 6), t.substring(6, 8));
                 for (var b = blocks.length - 1; b >= 0; b--) {
-                    if (blocks[b].type === 'BASE') {
-                        blocks[b].end = fmDt;
-                        break;
-                    }
+                    if (blocks[b].type === 'BASE') { blocks[b].end = fmDt; break; }
                 }
                 currentBlock = createBlock('BASE', fmDt, overallEnd);
                 blocks.push(currentBlock);
@@ -304,12 +318,17 @@
 
             if (/^(VRB|\d{3})(\d{2,3})(G\d{2,3})?(KT|MPS)$/.test(t)) {
                 var wMatch = t.match(/^(VRB|\d{3})(\d{2,3})(G\d{2,3})?(KT|MPS)$/);
-                var dir = wMatch[1] === 'VRB' ? 'Variable' : wMatch[1] + '°';
+                var dir = wMatch[1];
                 var spd = parseInt(wMatch[2], 10);
                 var gust = wMatch[3] ? parseInt(wMatch[3].substring(1), 10) : 0;
-                
-                if (dir === '000°' && spd === 0) { currentBlock.wind = 'Calm'; } 
-                else { currentBlock.wind = dir + ' at ' + spd + ' mph' + (gust > 0 ? ' (gust ' + gust + ' mph)' : ''); }
+                currentBlock.windDir = dir === 'VRB' ? null : parseInt(dir, 10);
+                currentBlock.windSpd = spd;
+                currentBlock.windGst = gust;
+                if (dir === '000' && spd === 0) {
+                    currentBlock.wind = 'Calm';
+                } else {
+                    currentBlock.wind = (dir === 'VRB' ? 'VRB' : dir + '°') + ' ' + spd + (gust ? 'G' + gust : '');
+                }
                 continue;
             }
 
@@ -317,14 +336,14 @@
                 var vVal = t.replace('SM', '').replace('M', '');
                 if (vVal === 'P6' || t === '9999') {
                     currentBlock.rawVis = 10;
-                    currentBlock.vis = '> 6 mi';
-                } else if (vVal.includes('/')) {
+                    currentBlock.vis = '6+';
+                } else if (vVal.indexOf('/') !== -1) {
                     var pts = vVal.split('/');
                     currentBlock.rawVis = parseInt(pts[0], 10) / parseInt(pts[1], 10);
-                    currentBlock.vis = vVal + ' mi';
+                    currentBlock.vis = vVal;
                 } else {
                     currentBlock.rawVis = parseInt(vVal, 10);
-                    currentBlock.vis = vVal + ' mi';
+                    currentBlock.vis = vVal;
                 }
                 continue;
             }
@@ -332,27 +351,21 @@
             if (/^(FEW|SCT|BKN|OVC|VV)(\d{3})(CB|TCU)?$/.test(t)) {
                 var cMatch = t.match(/^(FEW|SCT|BKN|OVC|VV)(\d{3})(CB|TCU)?$/);
                 var cType = cMatch[1];
-                var cHgt = parseInt(cMatch[2], 10); 
+                var cHgt = parseInt(cMatch[2], 10);
                 var displayHgt = cHgt * 100;
-                
                 if (cType === 'BKN' || cType === 'OVC' || cType === 'VV') {
                     if (currentBlock.rawCeil === null || cHgt < currentBlock.rawCeil) {
                         currentBlock.rawCeil = cHgt;
                     }
                 }
-
-                var cover = 'Few';
-                if (cType === 'SCT') cover = 'Scattered';
-                if (cType === 'BKN') cover = 'Broken';
-                if (cType === 'OVC') cover = 'Overcast';
-                if (cType === 'VV') cover = 'Vert. Vis';
-
-                currentBlock.clouds.push(cover + ' ' + displayHgt.toLocaleString() + "'");
+                var cover = cType;
+                var hStr = displayHgt >= 1000 ? Math.round(displayHgt / 1000) + 'k' : String(displayHgt);
+                currentBlock.clouds.push({ cover: cover, hgt: hStr, raw: cHgt });
                 continue;
             }
 
             if (t === 'SKC' || t === 'CLR') {
-                currentBlock.clouds.push('Clear');
+                currentBlock.clouds.push({ cover: 'CLR', hgt: '', raw: 999 });
                 continue;
             }
 
@@ -362,30 +375,36 @@
             }
 
             if (/^(\+|-|VC)?(MI|PR|BC|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PE|GR|GS|UP)?(BR|FG|FU|VA|DU|SA|HZ|PY)?(PO|SQ|FC|SS|DS)?$/.test(t) && t.length > 1) {
-                if (!t.startsWith('A') && !t.includes('/')) {
-                    currentBlock.wx.push(decodeWxCode(t));
+                if (!t.startsWith('A') && t.indexOf('/') === -1) {
+                    currentBlock.wx.push(t);
                 }
             }
         }
 
-        var tbody = document.getElementById('taf-table-body');
-        tbody.innerHTML = '';
+        var strip = document.getElementById('hours-strip');
+        strip.innerHTML = '';
 
         if (!overallStart || !overallEnd) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #dc2626; padding: 20px;">Could not parse forecast time frame.</td></tr>';
+            strip.innerHTML = '<div class="error-msg">Could not parse TAF time frame</div>';
             return;
         }
 
-        var lastWind = '--', lastVis = '--', lastClouds = [], lastWx = [];
+        var lastWind = '', lastWindDir = null, lastWindSpd = null, lastWindGst = null;
+        var lastVis = '--', lastClouds = [], lastWx = [];
         var lastRawVis = 99, lastRawCeil = 999;
 
-        blocks.forEach(function(b) {
+        blocks.forEach(function (b) {
             if (b.type === 'BASE') {
-                if (b.wind) lastWind = b.wind; else b.wind = lastWind;
+                if (b.wind) {
+                    lastWind = b.wind; lastWindDir = b.windDir;
+                    lastWindSpd = b.windSpd; lastWindGst = b.windGst;
+                } else {
+                    b.wind = lastWind; b.windDir = lastWindDir;
+                    b.windSpd = lastWindSpd; b.windGst = lastWindGst;
+                }
                 if (b.vis) lastVis = b.vis; else b.vis = lastVis;
                 if (b.clouds.length > 0) lastClouds = b.clouds; else b.clouds = lastClouds;
-                if (b.wx.length > 0 || b.wx === 'NSW') lastWx = b.wx; else b.wx = lastWx;
-                
+                if (b.wx.length > 0) lastWx = b.wx; else b.wx = lastWx;
                 if (b.rawVis !== null) lastRawVis = b.rawVis; else b.rawVis = lastRawVis;
                 if (b.rawCeil !== null) lastRawCeil = b.rawCeil; else b.rawCeil = lastRawCeil;
             }
@@ -398,12 +417,16 @@
 
         var startMs = overallStart.getTime();
         var endMs = overallEnd.getTime();
-        
-        if (loopMs < startMs || loopMs >= endMs) { 
-            loopMs = startMs > currentTopOfHourMs ? startMs : currentTopOfHourMs + hourInMs; 
+
+        if (loopMs < startMs || loopMs >= endMs) {
+            loopMs = startMs > currentTopOfHourMs ? startMs : currentTopOfHourMs + hourInMs;
         }
 
-        while (loopMs < endMs) {
+        /* At most 16 future hours, one card each — no scrolling */
+        var MAX_HOURS = 16;
+        var hoursShown = 0;
+
+        while (loopMs < endMs && hoursShown < MAX_HOURS) {
             var evalDate = new Date(loopMs);
             var activeBase = null;
             for (var b = 0; b < blocks.length; b++) {
@@ -420,63 +443,115 @@
                     }
                 }
             }
-            var activeTempo = blocks.find(function(b) {
+            var activeTempo = blocks.find(function (b) {
                 return (b.type === 'TEMPO' || b.type.startsWith('PROB')) &&
-                       b.start.getTime() <= loopMs && loopMs < b.end.getTime();
+                    b.start.getTime() <= loopMs && loopMs < b.end.getTime();
             });
 
-            if (activeBase) { appendHourlyRow(tbody, evalDate, activeBase, false, null); }
-            if (activeTempo) { appendHourlyRow(tbody, evalDate, activeTempo, true, activeBase); }
+            if (activeBase) {
+                /* One card per hour: if TEMPO is active, prefer its values and mark the card */
+                if (activeTempo) {
+                    appendCard(strip, evalDate, activeTempo, true, activeBase);
+                } else {
+                    appendCard(strip, evalDate, activeBase, false, null);
+                }
+                hoursShown++;
+            }
 
             loopMs += hourInMs;
         }
     }
-    
-    function appendHourlyRow(tbody, hourDt, dataBlock, isTempo, baseBlockForTempo) {
-        var tr = document.createElement('tr');
-        if (isTempo) tr.className = 'tempo-row';
 
-        var visToUse = dataBlock.rawVis !== null ? dataBlock.rawVis : (baseBlockForTempo ? baseBlockForTempo.rawVis : 99);
-        var ceilToUse = dataBlock.rawCeil !== null ? dataBlock.rawCeil : (baseBlockForTempo ? baseBlockForTempo.rawCeil : 999);
+    function appendCard(strip, hourDt, dataBlock, isTempo, baseBlock) {
+        var visToUse = dataBlock.rawVis !== null ? dataBlock.rawVis : (baseBlock ? baseBlock.rawVis : 99);
+        var ceilToUse = dataBlock.rawCeil !== null ? dataBlock.rawCeil : (baseBlock ? baseBlock.rawCeil : 999);
 
         var flightCat = 'VFR';
         var catClass = 'cat-vfr';
-        if (visToUse < 1 || ceilToUse < 5) { flightCat = 'LIFR'; catClass = 'cat-lifr'; }
-        else if (visToUse < 3 || ceilToUse < 10) { flightCat = 'IFR'; catClass = 'cat-ifr'; }
-        else if (visToUse <= 5 || ceilToUse <= 30) { flightCat = 'MVFR'; catClass = 'cat-mvfr'; }
+        var bgClass = 'bg-vfr';
+        if (visToUse < 1 || ceilToUse < 5) { flightCat = 'LIFR'; catClass = 'cat-lifr'; bgClass = 'bg-lifr'; }
+        else if (visToUse < 3 || ceilToUse < 10) { flightCat = 'IFR'; catClass = 'cat-ifr'; bgClass = 'bg-ifr'; }
+        else if (visToUse <= 5 || ceilToUse <= 30) { flightCat = 'MVFR'; catClass = 'cat-mvfr'; bgClass = 'bg-mvfr'; }
 
-        var timeHTML = formatLocalHour(hourDt);
+        /* Weather theme takes priority over category tint when present */
+        var wxCodes = (dataBlock.wx && dataBlock.wx.length) ? dataBlock.wx :
+            (baseBlock && baseBlock.wx ? baseBlock.wx : []);
+        var wxKind = classifyWx(wxCodes);
+        if (wxKind) bgClass = 'wx-' + wxKind;
+
+        var card = document.createElement('div');
+        card.className = 'hour-card ' + bgClass + (isTempo ? ' tempo' : '');
         if (isTempo) {
-            timeHTML += '<br/><span class="tempo-label">[' + dataBlock.type + ']</span>';
+            var label = dataBlock.type.startsWith('PROB') ? dataBlock.type.replace('PROB', 'P') : 'T';
+            card.setAttribute('data-tempo', label);
         }
 
-        var windHTML = dataBlock.wind || '--';
-        var visHTML = dataBlock.vis || '--';
-        var cloudsHTML = dataBlock.clouds && dataBlock.clouds.length > 0 ? dataBlock.clouds.join(', ') : '--';
-        var wxHTML = dataBlock.wx && dataBlock.wx.length > 0 && dataBlock.wx !== 'NSW' ? dataBlock.wx.join(', ') : 'None';
+        // Time
+        var timeEl = document.createElement('div');
+        timeEl.className = 'h-time';
+        timeEl.textContent = formatLocalHour(hourDt);
+        card.appendChild(timeEl);
 
-        var td = document.createElement('td');
-        td.setAttribute('colspan', '6');
-        td.innerHTML = `
-            <div class="row-wrapper">
-                <div class="primary-info">
-                    <div class="time-cell">${timeHTML}</div>
-                    <div class="rules-cell"><span class="cat-badge ${catClass}">${flightCat}</span></div>
-                    <div class="wind-cell">${windHTML}</div>
-                </div>
-                <div class="secondary-info">
-                    <div class="vis-item"><strong>Vis:</strong> ${visHTML}</div>
-                    <div class="clouds-item"><strong>Clouds:</strong> ${cloudsHTML}</div>
-                    <div class="wx-item ${wxHTML !== 'None' ? 'highlight-wx' : ''}"><strong>Wx:</strong> ${wxHTML}</div>
-                </div>
-            </div>
-        `;
-        
-        tr.appendChild(td);
-        tbody.appendChild(tr);
+        // Category badge
+        var catEl = document.createElement('div');
+        catEl.className = 'h-cat ' + catClass;
+        catEl.textContent = flightCat;
+        card.appendChild(catEl);
+
+        // Wind
+        var windEl = document.createElement('div');
+        windEl.className = 'h-wind';
+        var dir = dataBlock.windDir;
+        var spd = dataBlock.windSpd;
+        var gst = dataBlock.windGst;
+
+        if (spd === 0 || dataBlock.wind === 'Calm') {
+            windEl.innerHTML = '<div class="wind-spd">Calm</div>';
+        } else if (dir === null) {
+            windEl.innerHTML = '<div class="wind-arrow" style="font-size:14px">⟳</div>' +
+                '<div class="wind-spd">' + (spd || '—') + (gst ? '<span class="wind-gst">G' + gst + '</span>' : '') + '</div>';
+        } else {
+            var bearing = (dir + 180) % 360;
+            windEl.innerHTML =
+                '<div class="wind-arrow" style="transform:rotate(' + bearing + 'deg)">↑</div>' +
+                '<div class="wind-spd">' + spd + (gst ? '<span class="wind-gst">G' + gst + '</span>' : '') + '</div>';
+        }
+        card.appendChild(windEl);
+
+        // Bottom line: vis · ceiling
+        var bottom = document.createElement('div');
+        bottom.className = 'h-bottom';
+
+        var visStr = dataBlock.vis || (baseBlock ? baseBlock.vis : '—');
+        var visCls = (visToUse < 3) ? ' low-vis' : '';
+
+        var cldStr = '—';
+        var cldCls = '';
+        var clouds = (dataBlock.clouds && dataBlock.clouds.length) ? dataBlock.clouds :
+            (baseBlock && baseBlock.clouds ? baseBlock.clouds : []);
+        if (clouds.length) {
+            var best = clouds[0];
+            for (var c = 0; c < clouds.length; c++) {
+                if (clouds[c].raw < best.raw) best = clouds[c];
+            }
+            if (best.cover === 'CLR' || best.cover === 'Clear') {
+                cldStr = 'CLR';
+            } else {
+                cldStr = best.cover + (best.hgt ? best.hgt : '');
+            }
+            if (best.raw < 30) cldCls = ' low-ceil';
+        }
+
+        bottom.innerHTML =
+            '<span class="' + visCls.trim() + '">' + visStr + '</span>' +
+            ' · ' +
+            '<span class="' + cldCls.trim() + '">' + cldStr + '</span>';
+        card.appendChild(bottom);
+
+        strip.appendChild(card);
     }
 
-    window.addEventListener('message', function(event) {
+    window.addEventListener('message', function (event) {
         if (event.data && event.data.type === 'WEATHER_DATA') {
             handleWorkerPayload(event.data.payload);
         }
@@ -485,40 +560,46 @@
     function checkCachedData() {
         var cached = localStorage.getItem('cached_weather_payload');
         if (cached) {
-            try { handleWorkerPayload(JSON.parse(cached).data); } catch(e) {}
+            try { handleWorkerPayload(JSON.parse(cached).data); } catch (e) {}
         }
     }
 
     function handleWorkerPayload(payload) {
         var tafData = payload && payload.taf ? payload.taf : null;
-
         if (!tafData || tafData.trim().length === 0) {
-            document.getElementById('taf-table-body').innerHTML = '<tr><td colspan="6" style="text-align: center; color: #dc2626; padding: 20px;">No TAF forecast available.</td></tr>';
+            document.getElementById('hours-strip').innerHTML =
+                '<div class="error-msg">No TAF forecast available</div>';
             return;
         }
 
         var lines = tafData.split('\n');
-        var kwriTaf = "";
-        var kmjxTaf = "";
-        var currentTaf = "";
+        var kwriTaf = '';
+        var kmjxTaf = '';
+        var currentTaf = '';
 
-        lines.forEach(function(line) {
-            if (line.includes('TAF KWRI') || line.includes('KWRI ')) {
-                if (currentTaf) { if (currentTaf.includes('KWRI')) kwriTaf = currentTaf; if (currentTaf.includes('KMJX')) kmjxTaf = currentTaf; }
-                currentTaf = line + " ";
-            } else if (line.includes('TAF KMJX') || line.includes('KMJX ')) {
-                if (currentTaf) { if (currentTaf.includes('KWRI')) kwriTaf = currentTaf; if (currentTaf.includes('KMJX')) kmjxTaf = currentTaf; }
-                currentTaf = line + " ";
+        lines.forEach(function (line) {
+            if (line.indexOf('TAF KWRI') !== -1 || line.indexOf('KWRI ') !== -1) {
+                if (currentTaf) {
+                    if (currentTaf.indexOf('KWRI') !== -1) kwriTaf = currentTaf;
+                    if (currentTaf.indexOf('KMJX') !== -1) kmjxTaf = currentTaf;
+                }
+                currentTaf = line + ' ';
+            } else if (line.indexOf('TAF KMJX') !== -1 || line.indexOf('KMJX ') !== -1) {
+                if (currentTaf) {
+                    if (currentTaf.indexOf('KWRI') !== -1) kwriTaf = currentTaf;
+                    if (currentTaf.indexOf('KMJX') !== -1) kmjxTaf = currentTaf;
+                }
+                currentTaf = line + ' ';
             } else if (currentTaf) {
-                currentTaf += line + " ";
+                currentTaf += line + ' ';
             }
         });
-        if (currentTaf.includes('KWRI')) kwriTaf = currentTaf;
-        if (currentTaf.includes('KMJX')) kmjxTaf = currentTaf;
+        if (currentTaf.indexOf('KWRI') !== -1) kwriTaf = currentTaf;
+        if (currentTaf.indexOf('KMJX') !== -1) kmjxTaf = currentTaf;
 
-        if (kwriTaf) { parseAndDecodeTaf(kwriTaf); } 
-        else if (kmjxTaf) { parseAndDecodeTaf(kmjxTaf); } 
-        else { parseAndDecodeTaf(tafData); }
+        if (kwriTaf) parseAndDecodeTaf(kwriTaf);
+        else if (kmjxTaf) parseAndDecodeTaf(kmjxTaf);
+        else parseAndDecodeTaf(tafData);
     }
 
     checkCachedData();
