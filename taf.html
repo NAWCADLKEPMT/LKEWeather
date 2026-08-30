@@ -227,6 +227,12 @@
             color: #dc3545;
             font-weight: 700;
         }
+        .wind-unit {
+            font-size: 0.72em;
+            font-weight: 600;
+            opacity: 0.75;
+            margin-left: 1px;
+        }
 
         .h-bottom {
             font-size: 13px;
@@ -365,13 +371,19 @@
                 var dir = wMatch[1];
                 var spd = parseInt(wMatch[2], 10);
                 var gust = wMatch[3] ? parseInt(wMatch[3].substring(1), 10) : 0;
+                var unit = wMatch[4];
+                /* Always store / display in knots */
+                if (unit === 'MPS') {
+                    spd = Math.round(spd * 1.94384);
+                    if (gust) gust = Math.round(gust * 1.94384);
+                }
                 currentBlock.windDir = dir === 'VRB' ? null : parseInt(dir, 10);
                 currentBlock.windSpd = spd;
                 currentBlock.windGst = gust;
                 if (dir === '000' && spd === 0) {
                     currentBlock.wind = 'Calm';
                 } else {
-                    currentBlock.wind = (dir === 'VRB' ? 'VRB' : dir + '°') + ' ' + spd + (gust ? 'G' + gust : '');
+                    currentBlock.wind = (dir === 'VRB' ? 'VRB' : dir + '°') + ' ' + spd + (gust ? 'G' + gust : '') + 'kt';
                 }
                 continue;
             }
@@ -583,12 +595,14 @@
             windEl.innerHTML = '<div class="wind-spd">Calm</div>';
         } else if (dir === null) {
             windEl.innerHTML = '<div class="wind-arrow" style="font-size:14px">⟳</div>' +
-                '<div class="wind-spd">' + (spd || '—') + (gst ? '<span class="wind-gst">G' + gst + '</span>' : '') + '</div>';
+                '<div class="wind-spd">' + (spd || '—') + '<span class="wind-unit">kt</span>' +
+                (gst ? '<span class="wind-gst">G' + gst + '</span>' : '') + '</div>';
         } else {
             var bearing = (dir + 180) % 360;
             windEl.innerHTML =
                 '<div class="wind-arrow" style="transform:rotate(' + bearing + 'deg)">↑</div>' +
-                '<div class="wind-spd">' + spd + (gst ? '<span class="wind-gst">G' + gst + '</span>' : '') + '</div>';
+                '<div class="wind-spd">' + spd + '<span class="wind-unit">kt</span>' +
+                (gst ? '<span class="wind-gst">G' + gst + '</span>' : '') + '</div>';
         }
         card.appendChild(windEl);
 
