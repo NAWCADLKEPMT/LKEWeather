@@ -27,22 +27,38 @@
 
         .hours-scroll {
             flex: 1;
-            overflow: hidden;
+            overflow-x: auto;
+            overflow-y: hidden;
             display: flex;
             align-items: stretch;
             gap: 5px;
             padding: 5px 6px;
+            /* Hide scrollbar — scroll via touch / trackpad / wheel */
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            -webkit-overflow-scrolling: touch;
+        }
+        .hours-scroll::-webkit-scrollbar {
+            display: none;
+            width: 0;
+            height: 0;
         }
 
-        /* Hour card — expands equally so ≤16 fit with no scroll */
+        /*
+         * Wide layout: exactly 16 cards fill the viewport width.
+         * Extra forecast hours sit off-screen and can be scrolled to.
+         * 15 gaps × 5px = 75px
+         */
         .hour-card {
-            flex: 1 1 0;
-            min-width: 0;
+            flex: 0 0 calc((100% - 75px) / 16);
+            width: calc((100% - 75px) / 16);
+            min-width: calc((100% - 75px) / 16);
+            max-width: calc((100% - 75px) / 16);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            padding: 5px 4px 4px;
+            padding: 5px 4px 5px;
             border-radius: 5px;
             background: #ffffff;
             border: 1px solid #ced4da;
@@ -55,6 +71,33 @@
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
+        }
+
+        /* Mobile / narrow: fewer visible cards so each keeps a similar aspect ratio */
+        @media screen and (max-width: 1100px), screen and (max-aspect-ratio: 1/1), (orientation: portrait) {
+            .hours-scroll {
+                padding: 6px 6px;
+                gap: 5px;
+                /* Allow vertical room for full card content */
+                align-items: stretch;
+            }
+            .hour-card {
+                /* ~5 cards visible — closer to the wide-screen card proportions */
+                flex: 0 0 calc((100% - 20px) / 5);
+                width: calc((100% - 20px) / 5);
+                min-width: calc((100% - 20px) / 5);
+                max-width: calc((100% - 20px) / 5);
+                padding: 6px 5px 6px;
+                /* Prefer content height over forced clipping */
+                min-height: 118px;
+                justify-content: space-evenly;
+            }
+            .h-time { font-size: 14px; }
+            .h-cat  { font-size: 13px; padding: 2px 6px; }
+            .wind-arrow { font-size: 18px; }
+            .wind-spd { font-size: 14px; }
+            .wind-gst { font-size: 11px; }
+            .h-bottom { font-size: 12px; }
         }
 
         .hour-card > * {
@@ -422,11 +465,8 @@
             loopMs = startMs > currentTopOfHourMs ? startMs : currentTopOfHourMs + hourInMs;
         }
 
-        /* At most 16 future hours, one card each — no scrolling */
-        var MAX_HOURS = 16;
-        var hoursShown = 0;
-
-        while (loopMs < endMs && hoursShown < MAX_HOURS) {
+        /* Render full forecast; CSS shows 16 (desktop) or 5 (mobile) with hidden scroll for the rest */
+        while (loopMs < endMs) {
             var evalDate = new Date(loopMs);
             var activeBase = null;
             for (var b = 0; b < blocks.length; b++) {
@@ -455,11 +495,33 @@
                 } else {
                     appendCard(strip, evalDate, activeBase, false, null);
                 }
-                hoursShown++;
             }
 
             loopMs += hourInMs;
         }
+
+        /* Tell parent how tall the strip needs to be so mobile can grow instead of clipping */
+        requestAnimationFrame(function () {
+            reportHeightToParent();
+        });
+    }
+
+    function reportHeightToParent() {
+        try {
+            var strip = document.getElementById('hours-strip');
+            if (!strip) return;
+            /* Measure the tallest card + vertical padding */
+            var cards = strip.querySelectorAll('.hour-card');
+            var maxCard = 0;
+            for (var i = 0; i < cards.length; i++) {
+                maxCard = Math.max(maxCard, cards[i].scrollHeight);
+            }
+            var pad = 12; /* .hours-scroll vertical padding */
+            var needed = Math.max(maxCard + pad, strip.scrollHeight, 110);
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: 'TAF_HEIGHT', height: needed }, '*');
+            }
+        } catch (e) {}
     }
 
     function appendCard(strip, hourDt, dataBlock, isTempo, baseBlock) {
@@ -569,6 +631,7 @@
         if (!tafData || tafData.trim().length === 0) {
             document.getElementById('hours-strip').innerHTML =
                 '<div class="error-msg">No TAF forecast available</div>';
+            reportHeightToParent();
             return;
         }
 
@@ -603,6 +666,12 @@
     }
 
     checkCachedData();
+
+    /* Re-report after orientation / viewport changes */
+    window.addEventListener('resize', function () {
+        clearTimeout(window._tafHTimer);
+        window._tafHTimer = setTimeout(reportHeightToParent, 150);
+    });
 </script>
 </body>
 </html>
