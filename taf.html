@@ -21,12 +21,10 @@
             overflow-y: auto;
             box-sizing: border-box;
             background-color: #f8fafc;
-            /* Hide scrollbar for IE, Edge and Firefox */
             -ms-overflow-style: none;  
             scrollbar-width: none;  
         }
 
-        /* Hide scrollbar for Chrome, Safari and Opera */
         .table-container::-webkit-scrollbar {
             display: none;
         }
@@ -35,27 +33,17 @@
             width: 100%;
             border-collapse: collapse;
             text-align: left;
-            font-size: 20px;
+            font-size: 17px;
         }
 
-        table.taf-table th {
-            background-color: #e2e8f0;
-            color: #0f172a;
-            padding: 12px 16px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 2px solid #cbd5e1;
-            position: sticky;
-            top: 0;
-            z-index: 2;
+        table.taf-table thead {
+            display: none;
         }
 
         table.taf-table td {
-            padding: 10px 16px;
+            padding: 0;
             border-bottom: 1px solid #e2e8f0;
             color: #1e293b;
-            vertical-align: middle;
         }
 
         table.taf-table tr:last-child td {
@@ -65,13 +53,66 @@
         table.taf-table tr:nth-child(even) {
             background-color: rgba(0, 0, 0, 0.02);
         }
+        
+        .row-wrapper {
+            padding: 8px 14px;
+        }
+        
+        /* Primary Row: 3 Equal Columns (Ensures Center Alignment) */
+        .primary-info {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            font-weight: 600;
+        }
 
         .time-cell {
+            flex: 1 1 0;
+            text-align: left;
             font-weight: 700;
             color: #b45309;
             white-space: nowrap;
         }
 
+        .rules-cell {
+            flex: 1 1 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .wind-cell {
+            flex: 1 1 0;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        /* Secondary Row: Tightly Packed with Controlled Gaps */
+        .secondary-info {
+            display: flex;
+            align-items: baseline;
+            gap: 14px;
+            margin-top: 5px;
+            font-size: 0.88em;
+            color: #475569;
+            flex-wrap: wrap;
+        }
+
+        .vis-item {
+            flex: 0 0 auto;
+            white-space: nowrap;
+        }
+
+        .clouds-item {
+            flex: 1 1 auto;
+            min-width: 120px;
+        }
+
+        .wx-item {
+            flex: 0 0 auto;
+            white-space: nowrap;
+        }
+        
         .tempo-row {
             background-color: rgba(245, 158, 11, 0.08) !important;
         }
@@ -80,25 +121,19 @@
             color: #d97706;
             font-size: 0.8em;
             font-weight: 800;
-            margin-left: 6px;
         }
 
         .highlight-wx {
             color: #e11d48;
             font-weight: 600;
         }
-
-        .highlight-wind {
-            color: #0f172a;
-            font-weight: 600;
-        }
-
+        
         /* Flight Category Badges */
         .cat-badge {
-            padding: 4px 10px;
+            padding: 3px 10px;
             border-radius: 6px;
             font-weight: 800;
-            font-size: 0.85em;
+            font-size: 0.82em;
             text-align: center;
             display: inline-block;
             min-width: 50px;
@@ -115,17 +150,17 @@
     <table class="taf-table">
         <thead>
             <tr>
-                <th style="width: 17%;">Time (ET)</th>
-                <th style="width: 10%;">Rules</th>
-                <th style="width: 20%;">Winds</th>
-                <th style="width: 15%;">Visibility</th>
-                <th style="width: 22%;">Clouds / Ceiling</th>
-                <th style="width: 16%;">Weather</th>
+                <th>Time</th>
+                <th>Rules</th>
+                <th>Winds</th>
+                <th>Visibility</th>
+                <th>Clouds</th>
+                <th>Weather</th>
             </tr>
         </thead>
         <tbody id="taf-table-body">
             <tr>
-                <td colspan="6" style="text-align: center; color: #64748b;">Loading hourly forecast...</td>
+                <td colspan="6" style="text-align: center; color: #64748b; padding: 20px;">Loading hourly forecast...</td>
             </tr>
         </tbody>
     </table>
@@ -175,7 +210,6 @@
         var ampm = hours >= 12 ? 'PM' : 'AM';
         hours = hours % 12;
         hours = hours ? hours : 12;
-        
         return hours + ':00 ' + ampm;
     }
 
@@ -275,7 +309,7 @@
                 var gust = wMatch[3] ? parseInt(wMatch[3].substring(1), 10) : 0;
                 
                 if (dir === '000°' && spd === 0) { currentBlock.wind = 'Calm'; } 
-                else { currentBlock.wind = dir + ' at ' + spd + ' mph' + (gust > 0 ? ' (gusting ' + gust + ' mph)' : ''); }
+                else { currentBlock.wind = dir + ' at ' + spd + ' mph' + (gust > 0 ? ' (gust ' + gust + ' mph)' : ''); }
                 continue;
             }
 
@@ -283,14 +317,14 @@
                 var vVal = t.replace('SM', '').replace('M', '');
                 if (vVal === 'P6' || t === '9999') {
                     currentBlock.rawVis = 10;
-                    currentBlock.vis = '> 6 miles';
+                    currentBlock.vis = '> 6 mi';
                 } else if (vVal.includes('/')) {
                     var pts = vVal.split('/');
                     currentBlock.rawVis = parseInt(pts[0], 10) / parseInt(pts[1], 10);
-                    currentBlock.vis = vVal + ' miles';
+                    currentBlock.vis = vVal + ' mi';
                 } else {
                     currentBlock.rawVis = parseInt(vVal, 10);
-                    currentBlock.vis = vVal + ' miles';
+                    currentBlock.vis = vVal + ' mi';
                 }
                 continue;
             }
@@ -309,16 +343,16 @@
 
                 var cover = 'Few';
                 if (cType === 'SCT') cover = 'Scattered';
-                if (cType === 'BKN') cover = 'Broken Ceiling';
-                if (cType === 'OVC') cover = 'Overcast Ceiling';
-                if (cType === 'VV') cover = 'Vertical Vis';
+                if (cType === 'BKN') cover = 'Broken';
+                if (cType === 'OVC') cover = 'Overcast';
+                if (cType === 'VV') cover = 'Vert. Vis';
 
-                currentBlock.clouds.push(cover + ' ' + displayHgt.toLocaleString() + ' ft');
+                currentBlock.clouds.push(cover + ' ' + displayHgt.toLocaleString() + "'");
                 continue;
             }
 
             if (t === 'SKC' || t === 'CLR') {
-                currentBlock.clouds.push('Clear skies');
+                currentBlock.clouds.push('Clear');
                 continue;
             }
 
@@ -338,7 +372,7 @@
         tbody.innerHTML = '';
 
         if (!overallStart || !overallEnd) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #dc2626;">Could not parse forecast time frame.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #dc2626; padding: 20px;">Could not parse forecast time frame.</td></tr>';
             return;
         }
 
@@ -359,7 +393,6 @@
 
         var now = new Date();
         var hourInMs = 60 * 60 * 1000;
-        // Start from the next top of the hour to exclude the current active hour
         var currentTopOfHourMs = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), 0, 0, 0).getTime();
         var loopMs = currentTopOfHourMs + hourInMs;
 
@@ -372,7 +405,6 @@
 
         while (loopMs < endMs) {
             var evalDate = new Date(loopMs);
-
             var activeBase = null;
             for (var b = 0; b < blocks.length; b++) {
                 if (blocks[b].type === 'BASE' && blocks[b].start.getTime() <= loopMs && loopMs < blocks[b].end.getTime()) {
@@ -380,7 +412,6 @@
                     break;
                 }
             }
-
             if (!activeBase) {
                 for (var b = blocks.length - 1; b >= 0; b--) {
                     if (blocks[b].type === 'BASE' && blocks[b].start.getTime() <= loopMs) {
@@ -389,7 +420,6 @@
                     }
                 }
             }
-
             var activeTempo = blocks.find(function(b) {
                 return (b.type === 'TEMPO' || b.type.startsWith('PROB')) &&
                        b.start.getTime() <= loopMs && loopMs < b.end.getTime();
@@ -401,15 +431,10 @@
             loopMs += hourInMs;
         }
     }
-
+    
     function appendHourlyRow(tbody, hourDt, dataBlock, isTempo, baseBlockForTempo) {
         var tr = document.createElement('tr');
         if (isTempo) tr.className = 'tempo-row';
-
-        var tdTime = document.createElement('td');
-        tdTime.className = 'time-cell';
-        tdTime.innerHTML = formatLocalHour(hourDt);
-        if (isTempo) { tdTime.innerHTML += ' <br/><span class="tempo-label">[' + dataBlock.type + ']</span>'; }
 
         var visToUse = dataBlock.rawVis !== null ? dataBlock.rawVis : (baseBlockForTempo ? baseBlockForTempo.rawVis : 99);
         var ceilToUse = dataBlock.rawCeil !== null ? dataBlock.rawCeil : (baseBlockForTempo ? baseBlockForTempo.rawCeil : 999);
@@ -420,34 +445,34 @@
         else if (visToUse < 3 || ceilToUse < 10) { flightCat = 'IFR'; catClass = 'cat-ifr'; }
         else if (visToUse <= 5 || ceilToUse <= 30) { flightCat = 'MVFR'; catClass = 'cat-mvfr'; }
 
-        var tdCat = document.createElement('td');
-        tdCat.innerHTML = '<span class="cat-badge ' + catClass + '">' + flightCat + '</span>';
-
-        var tdWind = document.createElement('td');
-        tdWind.className = 'highlight-wind';
-        tdWind.innerHTML = dataBlock.wind || '--';
-
-        var tdVis = document.createElement('td');
-        tdVis.textContent = dataBlock.vis || '--';
-
-        var tdClouds = document.createElement('td');
-        tdClouds.innerHTML = dataBlock.clouds && dataBlock.clouds.length > 0 ? dataBlock.clouds.join(', ') : '--';
-
-        var tdWx = document.createElement('td');
-        if (dataBlock.wx && dataBlock.wx.length > 0 && dataBlock.wx !== 'NSW') {
-            tdWx.className = 'highlight-wx';
-            tdWx.textContent = dataBlock.wx.join(', ');
-        } else {
-            tdWx.textContent = 'None';
+        var timeHTML = formatLocalHour(hourDt);
+        if (isTempo) {
+            timeHTML += '<br/><span class="tempo-label">[' + dataBlock.type + ']</span>';
         }
 
-        tr.appendChild(tdTime);
-        tr.appendChild(tdCat);
-        tr.appendChild(tdWind);
-        tr.appendChild(tdVis);
-        tr.appendChild(tdClouds);
-        tr.appendChild(tdWx);
+        var windHTML = dataBlock.wind || '--';
+        var visHTML = dataBlock.vis || '--';
+        var cloudsHTML = dataBlock.clouds && dataBlock.clouds.length > 0 ? dataBlock.clouds.join(', ') : '--';
+        var wxHTML = dataBlock.wx && dataBlock.wx.length > 0 && dataBlock.wx !== 'NSW' ? dataBlock.wx.join(', ') : 'None';
 
+        var td = document.createElement('td');
+        td.setAttribute('colspan', '6');
+        td.innerHTML = `
+            <div class="row-wrapper">
+                <div class="primary-info">
+                    <div class="time-cell">${timeHTML}</div>
+                    <div class="rules-cell"><span class="cat-badge ${catClass}">${flightCat}</span></div>
+                    <div class="wind-cell">${windHTML}</div>
+                </div>
+                <div class="secondary-info">
+                    <div class="vis-item"><strong>Vis:</strong> ${visHTML}</div>
+                    <div class="clouds-item"><strong>Clouds:</strong> ${cloudsHTML}</div>
+                    <div class="wx-item ${wxHTML !== 'None' ? 'highlight-wx' : ''}"><strong>Wx:</strong> ${wxHTML}</div>
+                </div>
+            </div>
+        `;
+        
+        tr.appendChild(td);
         tbody.appendChild(tr);
     }
 
@@ -468,7 +493,7 @@
         var tafData = payload && payload.taf ? payload.taf : null;
 
         if (!tafData || tafData.trim().length === 0) {
-            document.getElementById('taf-table-body').innerHTML = '<tr><td colspan="6" style="text-align: center; color: #dc2626;">No TAF forecast available.</td></tr>';
+            document.getElementById('taf-table-body').innerHTML = '<tr><td colspan="6" style="text-align: center; color: #dc2626; padding: 20px;">No TAF forecast available.</td></tr>';
             return;
         }
 
