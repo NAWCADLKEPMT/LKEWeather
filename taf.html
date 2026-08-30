@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #f8fafc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            box-sizing: border-box;
+        }
+
+        .table-container {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            box-sizing: border-box;
+            background-color: #f8fafc;
+            /* Hide scrollbar for IE, Edge and Firefox */
+            -ms-overflow-style: none;  
+            scrollbar-width: none;  
+        }
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .table-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        table.taf-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 20px;
+        }
+
+        table.taf-table th {
+            background-color: #e2e8f0;
+            color: #0f172a;
+            padding: 12px 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #cbd5e1;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        table.taf-table td {
+            padding: 10px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #1e293b;
+            vertical-align: middle;
+        }
+
+        table.taf-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        table.taf-table tr:nth-child(even) {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+
+        .time-cell {
+            font-weight: 700;
+            color: #b45309;
+            white-space: nowrap;
+        }
+
+        .tempo-row {
+            background-color: rgba(245, 158, 11, 0.08) !important;
+        }
+
+        .tempo-label {
+            color: #d97706;
+            font-size: 0.8em;
+            font-weight: 800;
+            margin-left: 6px;
+        }
+
+        .highlight-wx {
+            color: #e11d48;
+            font-weight: 600;
+        }
+
+        .highlight-wind {
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        /* Flight Category Badges */
+        .cat-badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 800;
+            font-size: 0.85em;
+            text-align: center;
+            display: inline-block;
+            min-width: 50px;
+        }
+        .cat-vfr { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .cat-mvfr { background-color: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+        .cat-ifr { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        .cat-lifr { background-color: #fae8ff; color: #86198f; border: 1px solid #f5d0fe; }
+    </style>
+</head>
+<body>
+
+<div class="table-container">
+    <table class="taf-table">
+        <thead>
+            <tr>
+                <th style="width: 17%;">Time (ET)</th>
+                <th style="width: 10%;">Rules</th>
+                <th style="width: 20%;">Winds</th>
+                <th style="width: 15%;">Visibility</th>
+                <th style="width: 22%;">Clouds / Ceiling</th>
+                <th style="width: 16%;">Weather</th>
+            </tr>
+        </thead>
+        <tbody id="taf-table-body">
+            <tr>
+                <td colspan="6" style="text-align: center; color: #64748b;">Loading hourly forecast...</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    var wxTypes = {
+        'DZ': 'Drizzle', 'RA': 'Rain', 'SN': 'Snow', 'SG': 'Snow Grains',
+        'IC': 'Ice Crystals', 'PL': 'Sleet', 'GR': 'Hail', 'GS': 'Small Hail',
+        'UP': 'Unknown Precipitation', 'BR': 'Mist', 'FG': 'Fog', 'FU': 'Smoke',
+        'VA': 'Volcanic Ash', 'DU': 'Widespread Dust', 'SA': 'Sand', 'HZ': 'Haze',
+        'PY': 'Spray', 'PO': 'Dust Whirls', 'SQ': 'Squalls', 'FC': 'Funnel Cloud',
+        'SS': 'Sandstorm', 'DS': 'Duststorm'
+    };
+
+    var wxDescriptors = {
+        'MI': 'Shallow', 'PR': 'Partial', 'BC': 'Patches of', 'DR': 'Low Drifting',
+        'BL': 'Blowing', 'SH': 'Showers of', 'TS': 'Thunderstorms with', 'FZ': 'Freezing'
+    };
+
+    function decodeWxCode(code) {
+        var intensity = "";
+        if (code.startsWith('-')) { intensity = "Light "; code = code.substring(1); }
+        else if (code.startsWith('+')) { intensity = "Heavy "; code = code.substring(1); }
+        else if (code.startsWith('VC')) { intensity = "Nearby "; code = code.substring(2); }
+
+        var desc = "";
+        for (var key in wxDescriptors) {
+            if (code.startsWith(key)) {
+                desc = wxDescriptors[key] + " ";
+                code = code.substring(key.length);
+                break;
+            }
+        }
+
+        var mainWx = [];
+        for (var i = 0; i < code.length; i += 2) {
+            var pair = code.substring(i, i + 2);
+            if (wxTypes[pair]) mainWx.push(wxTypes[pair]);
+        }
+
+        return intensity + desc + (mainWx.length > 0 ? mainWx.join(" & ") : code);
+    }
+
+    function formatLocalHour(dateObj) {
+        var hours = dateObj.getHours();
+        var ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        
+        return hours + ':00 ' + ampm;
+    }
+
+    function parseTafTimestamp(dayStr, hourStr, minStr) {
+        var now = new Date();
+        var day = parseInt(dayStr, 10);
+        var hr = parseInt(hourStr, 10);
+        var min = minStr ? parseInt(minStr, 10) : 0;
+
+        var year = now.getUTCFullYear();
+        var month = now.getUTCMonth();
+
+        if (day > now.getUTCDate() + 15) { month -= 1; } 
+        else if (day < now.getUTCDate() - 15) { month += 1; }
+
+        var dt = new Date(Date.UTC(year, month, day, 0, min, 0, 0));
+        dt.setUTCHours(hr); 
+        return dt;
+    }
+
+    function createBlock(type, start, end) {
+        return { 
+            type: type, start: start, end: end, 
+            wind: '', vis: '', clouds: [], wx: [], 
+            rawVis: null, rawCeil: null 
+        };
+    }
+
+    function parseAndDecodeTaf(rawText) {
+        if (!rawText) return;
+
+        var tokens = rawText.trim().split(/\s+/);
+        var overallStart = null;
+        var overallEnd = null;
+        var blocks = [];
+        var currentBlock = null;
+
+        for (var i = 0; i < tokens.length; i++) {
+            var t = tokens[i];
+            var prevToken = i > 0 ? tokens[i-1] : '';
+
+            if (prevToken === 'BECMG' && /^\d{4}\/\d{4}$/.test(t)) {
+                var bRange = t.split('/');
+                var bStart = parseTafTimestamp(bRange[0].substring(0,2), bRange[0].substring(2,4));
+                
+                for (var b = blocks.length - 1; b >= 0; b--) {
+                    if (blocks[b].type === 'BASE') {
+                        blocks[b].end = bStart;
+                        break;
+                    }
+                }
+                currentBlock = createBlock('BASE', bStart, overallEnd);
+                blocks.push(currentBlock);
+                continue;
+            }
+
+            if ((prevToken === 'TEMPO' || prevToken.startsWith('PROB')) && /^\d{4}\/\d{4}$/.test(t)) {
+                var timeRange = t.split('/');
+                var stDt = parseTafTimestamp(timeRange[0].substring(0,2), timeRange[0].substring(2,4));
+                var endDt = parseTafTimestamp(timeRange[1].substring(0,2), timeRange[1].substring(2,4));
+                
+                currentBlock = createBlock(prevToken, stDt, endDt);
+                blocks.push(currentBlock);
+                continue;
+            }
+
+            if (!overallStart && /^\d{4}\/\d{4}$/.test(t)) {
+                var validRange = t.split('/');
+                overallStart = parseTafTimestamp(validRange[0].substring(0,2), validRange[0].substring(2,4));
+                overallEnd = parseTafTimestamp(validRange[1].substring(0,2), validRange[1].substring(2,4));
+                
+                currentBlock = createBlock('BASE', overallStart, overallEnd);
+                blocks.push(currentBlock);
+                continue;
+            }
+
+            if (t.startsWith('FM') && /^\d{6}$/.test(t.substring(2))) {
+                var fmDt = parseTafTimestamp(t.substring(2,4), t.substring(4,6), t.substring(6,8));
+                
+                for (var b = blocks.length - 1; b >= 0; b--) {
+                    if (blocks[b].type === 'BASE') {
+                        blocks[b].end = fmDt;
+                        break;
+                    }
+                }
+                currentBlock = createBlock('BASE', fmDt, overallEnd);
+                blocks.push(currentBlock);
+                continue;
+            }
+
+            if (!currentBlock) continue;
+
+            if (/^(VRB|\d{3})(\d{2,3})(G\d{2,3})?(KT|MPS)$/.test(t)) {
+                var wMatch = t.match(/^(VRB|\d{3})(\d{2,3})(G\d{2,3})?(KT|MPS)$/);
+                var dir = wMatch[1] === 'VRB' ? 'Variable' : wMatch[1] + '°';
+                var spd = parseInt(wMatch[2], 10);
+                var gust = wMatch[3] ? parseInt(wMatch[3].substring(1), 10) : 0;
+                
+                if (dir === '000°' && spd === 0) { currentBlock.wind = 'Calm'; } 
+                else { currentBlock.wind = dir + ' at ' + spd + ' mph' + (gust > 0 ? ' (gusting ' + gust + ' mph)' : ''); }
+                continue;
+            }
+
+            if (/^(M?\d{1,2}\/\d{1,2}|\d{1,2}|P6)SM$/.test(t) || t === '9999') {
+                var vVal = t.replace('SM', '').replace('M', '');
+                if (vVal === 'P6' || t === '9999') {
+                    currentBlock.rawVis = 10;
+                    currentBlock.vis = '> 6 miles';
+                } else if (vVal.includes('/')) {
+                    var pts = vVal.split('/');
+                    currentBlock.rawVis = parseInt(pts[0], 10) / parseInt(pts[1], 10);
+                    currentBlock.vis = vVal + ' miles';
+                } else {
+                    currentBlock.rawVis = parseInt(vVal, 10);
+                    currentBlock.vis = vVal + ' miles';
+                }
+                continue;
+            }
+
+            if (/^(FEW|SCT|BKN|OVC|VV)(\d{3})(CB|TCU)?$/.test(t)) {
+                var cMatch = t.match(/^(FEW|SCT|BKN|OVC|VV)(\d{3})(CB|TCU)?$/);
+                var cType = cMatch[1];
+                var cHgt = parseInt(cMatch[2], 10); 
+                var displayHgt = cHgt * 100;
+                
+                if (cType === 'BKN' || cType === 'OVC' || cType === 'VV') {
+                    if (currentBlock.rawCeil === null || cHgt < currentBlock.rawCeil) {
+                        currentBlock.rawCeil = cHgt;
+                    }
+                }
+
+                var cover = 'Few';
+                if (cType === 'SCT') cover = 'Scattered';
+                if (cType === 'BKN') cover = 'Broken Ceiling';
+                if (cType === 'OVC') cover = 'Overcast Ceiling';
+                if (cType === 'VV') cover = 'Vertical Vis';
+
+                currentBlock.clouds.push(cover + ' ' + displayHgt.toLocaleString() + ' ft');
+                continue;
+            }
+
+            if (t === 'SKC' || t === 'CLR') {
+                currentBlock.clouds.push('Clear skies');
+                continue;
+            }
+
+            if (t === 'NSW') {
+                currentBlock.wx = [];
+                continue;
+            }
+
+            if (/^(\+|-|VC)?(MI|PR|BC|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PE|GR|GS|UP)?(BR|FG|FU|VA|DU|SA|HZ|PY)?(PO|SQ|FC|SS|DS)?$/.test(t) && t.length > 1) {
+                if (!t.startsWith('A') && !t.includes('/')) {
+                    currentBlock.wx.push(decodeWxCode(t));
+                }
+            }
+        }
+
+        var tbody = document.getElementById('taf-table-body');
+        tbody.innerHTML = '';
+
+        if (!overallStart || !overallEnd) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #dc2626;">Could not parse forecast time frame.</td></tr>';
+            return;
+        }
+
+        var lastWind = '--', lastVis = '--', lastClouds = [], lastWx = [];
+        var lastRawVis = 99, lastRawCeil = 999;
+
+        blocks.forEach(function(b) {
+            if (b.type === 'BASE') {
+                if (b.wind) lastWind = b.wind; else b.wind = lastWind;
+                if (b.vis) lastVis = b.vis; else b.vis = lastVis;
+                if (b.clouds.length > 0) lastClouds = b.clouds; else b.clouds = lastClouds;
+                if (b.wx.length > 0 || b.wx === 'NSW') lastWx = b.wx; else b.wx = lastWx;
+                
+                if (b.rawVis !== null) lastRawVis = b.rawVis; else b.rawVis = lastRawVis;
+                if (b.rawCeil !== null) lastRawCeil = b.rawCeil; else b.rawCeil = lastRawCeil;
+            }
+        });
+
+        var now = new Date();
+        var hourInMs = 60 * 60 * 1000;
+        // Start from the next top of the hour to exclude the current active hour
+        var currentTopOfHourMs = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), 0, 0, 0).getTime();
+        var loopMs = currentTopOfHourMs + hourInMs;
+
+        var startMs = overallStart.getTime();
+        var endMs = overallEnd.getTime();
+        
+        if (loopMs < startMs || loopMs >= endMs) { 
+            loopMs = startMs > currentTopOfHourMs ? startMs : currentTopOfHourMs + hourInMs; 
+        }
+
+        while (loopMs < endMs) {
+            var evalDate = new Date(loopMs);
+
+            var activeBase = null;
+            for (var b = 0; b < blocks.length; b++) {
+                if (blocks[b].type === 'BASE' && blocks[b].start.getTime() <= loopMs && loopMs < blocks[b].end.getTime()) {
+                    activeBase = blocks[b];
+                    break;
+                }
+            }
+
+            if (!activeBase) {
+                for (var b = blocks.length - 1; b >= 0; b--) {
+                    if (blocks[b].type === 'BASE' && blocks[b].start.getTime() <= loopMs) {
+                        activeBase = blocks[b];
+                        break;
+                    }
+                }
+            }
+
+            var activeTempo = blocks.find(function(b) {
+                return (b.type === 'TEMPO' || b.type.startsWith('PROB')) &&
+                       b.start.getTime() <= loopMs && loopMs < b.end.getTime();
+            });
+
+            if (activeBase) { appendHourlyRow(tbody, evalDate, activeBase, false, null); }
+            if (activeTempo) { appendHourlyRow(tbody, evalDate, activeTempo, true, activeBase); }
+
+            loopMs += hourInMs;
+        }
+    }
+
+    function appendHourlyRow(tbody, hourDt, dataBlock, isTempo, baseBlockForTempo) {
+        var tr = document.createElement('tr');
+        if (isTempo) tr.className = 'tempo-row';
+
+        var tdTime = document.createElement('td');
+        tdTime.className = 'time-cell';
+        tdTime.innerHTML = formatLocalHour(hourDt);
+        if (isTempo) { tdTime.innerHTML += ' <br/><span class="tempo-label">[' + dataBlock.type + ']</span>'; }
+
+        var visToUse = dataBlock.rawVis !== null ? dataBlock.rawVis : (baseBlockForTempo ? baseBlockForTempo.rawVis : 99);
+        var ceilToUse = dataBlock.rawCeil !== null ? dataBlock.rawCeil : (baseBlockForTempo ? baseBlockForTempo.rawCeil : 999);
+
+        var flightCat = 'VFR';
+        var catClass = 'cat-vfr';
+        if (visToUse < 1 || ceilToUse < 5) { flightCat = 'LIFR'; catClass = 'cat-lifr'; }
+        else if (visToUse < 3 || ceilToUse < 10) { flightCat = 'IFR'; catClass = 'cat-ifr'; }
+        else if (visToUse <= 5 || ceilToUse <= 30) { flightCat = 'MVFR'; catClass = 'cat-mvfr'; }
+
+        var tdCat = document.createElement('td');
+        tdCat.innerHTML = '<span class="cat-badge ' + catClass + '">' + flightCat + '</span>';
+
+        var tdWind = document.createElement('td');
+        tdWind.className = 'highlight-wind';
+        tdWind.innerHTML = dataBlock.wind || '--';
+
+        var tdVis = document.createElement('td');
+        tdVis.textContent = dataBlock.vis || '--';
+
+        var tdClouds = document.createElement('td');
+        tdClouds.innerHTML = dataBlock.clouds && dataBlock.clouds.length > 0 ? dataBlock.clouds.join(', ') : '--';
+
+        var tdWx = document.createElement('td');
+        if (dataBlock.wx && dataBlock.wx.length > 0 && dataBlock.wx !== 'NSW') {
+            tdWx.className = 'highlight-wx';
+            tdWx.textContent = dataBlock.wx.join(', ');
+        } else {
+            tdWx.textContent = 'None';
+        }
+
+        tr.appendChild(tdTime);
+        tr.appendChild(tdCat);
+        tr.appendChild(tdWind);
+        tr.appendChild(tdVis);
+        tr.appendChild(tdClouds);
+        tr.appendChild(tdWx);
+
+        tbody.appendChild(tr);
+    }
+
+    window.addEventListener('message', function(event) {
+        if (event.data && event.data.type === 'WEATHER_DATA') {
+            handleWorkerPayload(event.data.payload);
+        }
+    });
+
+    function checkCachedData() {
+        var cached = localStorage.getItem('cached_weather_payload');
+        if (cached) {
+            try { handleWorkerPayload(JSON.parse(cached).data); } catch(e) {}
+        }
+    }
+
+    function handleWorkerPayload(payload) {
+        var tafData = payload && payload.taf ? payload.taf : null;
+
+        if (!tafData || tafData.trim().length === 0) {
+            document.getElementById('taf-table-body').innerHTML = '<tr><td colspan="6" style="text-align: center; color: #dc2626;">No TAF forecast available.</td></tr>';
+            return;
+        }
+
+        var lines = tafData.split('\n');
+        var kwriTaf = "";
+        var kmjxTaf = "";
+        var currentTaf = "";
+
+        lines.forEach(function(line) {
+            if (line.includes('TAF KWRI') || line.includes('KWRI ')) {
+                if (currentTaf) { if (currentTaf.includes('KWRI')) kwriTaf = currentTaf; if (currentTaf.includes('KMJX')) kmjxTaf = currentTaf; }
+                currentTaf = line + " ";
+            } else if (line.includes('TAF KMJX') || line.includes('KMJX ')) {
+                if (currentTaf) { if (currentTaf.includes('KWRI')) kwriTaf = currentTaf; if (currentTaf.includes('KMJX')) kmjxTaf = currentTaf; }
+                currentTaf = line + " ";
+            } else if (currentTaf) {
+                currentTaf += line + " ";
+            }
+        });
+        if (currentTaf.includes('KWRI')) kwriTaf = currentTaf;
+        if (currentTaf.includes('KMJX')) kmjxTaf = currentTaf;
+
+        if (kwriTaf) { parseAndDecodeTaf(kwriTaf); } 
+        else if (kmjxTaf) { parseAndDecodeTaf(kmjxTaf); } 
+        else { parseAndDecodeTaf(tafData); }
+    }
+
+    checkCachedData();
+</script>
+</body>
+</html>
