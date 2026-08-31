@@ -3,9 +3,6 @@
  <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- Non-Apple Manifest -->
-<link rel="manifest" href="/manifest.json">
-<link rel="apple-touch-icon" href="/Icons/logo180.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/Icons/logo180.png">
   <link rel="apple-touch-icon" sizes="152x152" href="/Icons/logo152.png">
   
@@ -23,6 +20,25 @@
         overflow: hidden;
         box-sizing: border-box;
     }
+
+    /* 3px refresh-cycle progress bar — pinned to the very top */
+    .refresh-progress {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background-color: rgba(51, 65, 85, 0.55);
+        z-index: 10000;
+        pointer-events: none;
+        overflow: hidden;
+    }
+    .refresh-progress-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #22c55e 0%, #3b82f6 100%);
+        will-change: width;
+    }
  
     .dashboard-container {
         display: flex;
@@ -31,6 +47,7 @@
         height: 100%;
         height: 100dvh;
         padding: 10px;
+        padding-top: 12px; /* leave a sliver so content clears the 3px bar */
         box-sizing: border-box;
         gap: 8px;
     }
@@ -92,6 +109,7 @@
             height: 100dvh !important;
             overflow: hidden !important;
             padding: 6px;
+            padding-top: 8px;
             gap: 6px;
         }
 
@@ -124,6 +142,11 @@
 </style>
  </head>
  <body>
+  <!-- Refresh-cycle progress (0% at fetch → 100% at 5 min → reset) -->
+  <div class="refresh-progress" aria-hidden="true">
+    <div id="refresh-progress-fill" class="refresh-progress-fill"></div>
+  </div>
+
   <div class="dashboard-container">
    <!-- Top METAR Panel -->
    <div class="pane metar-pane">
@@ -147,8 +170,30 @@
   </div>
 
   <script>
+    const REFRESH_MS = 300000; // 5 minutes — matches weather fetch interval
+    var cycleStart = Date.now();
+
+    function resetProgressCycle() {
+        cycleStart = Date.now();
+        updateProgressBar();
+    }
+
+    function updateProgressBar() {
+        var fill = document.getElementById('refresh-progress-fill');
+        if (!fill) return;
+        var elapsed = Date.now() - cycleStart;
+        var pct = Math.min(100, (elapsed / REFRESH_MS) * 100);
+        fill.style.width = pct + '%';
+    }
+
+    // Smooth enough for a 3px bar; cheap on a kiosk
+    setInterval(updateProgressBar, 250);
+
     // Single Centralized Fetch (Called on Load and Every 5 Minutes)
     async function fetchWeatherOnce() {
+        // New cycle starts when we kick off a refresh
+        resetProgressCycle();
+
         const targetUrl = 'https://metar-worker.nawcadlkepmt.workers.dev/';
         const apiKey = 'hkY^h&%yu787@$HdfDG';
 
@@ -215,8 +260,8 @@
     window.addEventListener('DOMContentLoaded', () => {
         fetchWeatherOnce();
         
-        // Refresh weather data every 5 minutes (300,000 ms)
-        setInterval(fetchWeatherOnce, 300000);
+        // Refresh weather data every 5 minutes (aligned with progress bar cycle)
+        setInterval(fetchWeatherOnce, REFRESH_MS);
     });
 
     (function setupIdleRefresh() {
