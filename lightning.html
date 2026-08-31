@@ -20,6 +20,7 @@
     .status-clear { background-color: #1e3a1e; color: #4ade80; border-bottom: 2px solid #2e7d32; }
     .status-caution { background-color: #3e2723; color: #fb8c00; border-bottom: 2px solid #ef6c00; }
     .status-warning { background-color: #4a1212; color: #f87171; border-bottom: 2px solid #b91c1c; animation: pulse 1.2s infinite; }
+    .status-listening { background-color: #1e293b; color: #94a3b8; border-bottom: 2px solid #475569; }
     @keyframes pulse { 0% { background-color: #4a1212; } 50% { background-color: #310b0b; } 100% { background-color: #4a1212; } }
     #traffic-container { position: relative; width: 100%; height: 100%; }
     #traffic-container iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; transition: border-radius 0.5s ease; border-radius: 0; }
@@ -95,6 +96,13 @@
   var lastNonCriticalToneTime = 0;
   var TONE_COOLDOWN_MS = 30000; // 30 seconds
   var clockOffset = null; // Track local-to-server time offset dynamically
+
+  // Feed-settle gate: do not claim "no strikes" until the stream looks healthy
+  var wsOpenAt = null;
+  var msgsSinceOpen = 0;
+  var feedSettled = false;
+  var MIN_MSGS_FOR_SETTLE = 5;
+  var SETTLE_TIMEOUT_MS = 20000;
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 35,
@@ -261,14 +269,21 @@ legend.addTo(map);
       diagStatus.style.color = '#4ade80'; 
       diagError.textContent = 'None'; 
       diagError.style.color = '#4ade80'; 
+      wsOpenAt = Date.now();
+      msgsSinceOpen = 0;
+      feedSettled = false;
       socket.send(JSON.stringify({ a: 111 })); 
-      setTimeout(function() { if (messageCount === 0 && socket && socket.readyState === WebSocket.OPEN) { socket.send(JSON.stringify({ a: 542 })); } }, 6000); 
-      setTimeout(function() { if (messageCount === 0 && socket && socket.readyState === WebSocket.OPEN) { socket.send(JSON.stringify({ r: 1 })); } }, 12000); 
+      setTimeout(function() { if (msgsSinceOpen === 0 && socket && socket.readyState === WebSocket.OPEN) { socket.send(JSON.stringify({ a: 542 })); } }, 6000); 
+      setTimeout(function() { if (msgsSinceOpen === 0 && socket && socket.readyState === WebSocket.OPEN) { socket.send(JSON.stringify({ r: 1 })); } }, 12000); 
       updateUI(); 
     }; 
     socket.onmessage = function(event) { 
       messageCount++; 
+      msgsSinceOpen++;
       document.getElementById('diag-msgs').textContent = messageCount; 
+      if (!feedSettled && msgsSinceOpen >= MIN_MSGS_FOR_SETTLE) {
+        feedSettled = true;
+      }
       try { 
         var decompressed = decodeLZW(event.data); 
         var data = JSON.parse(decompressed); 
@@ -299,6 +314,9 @@ legend.addTo(map);
       diagStatus.textContent = 'CLSD'; 
       diagStatus.style.color = '#f87171'; 
       clockOffset = null; // Reset offset to allow recalculation on reconnection
+      wsOpenAt = null;
+      msgsSinceOpen = 0;
+      feedSettled = false;
       setTimeout(initBlitzortungStream, 5000); 
     }; 
   }
@@ -390,12 +408,29 @@ legend.addTo(map);
     var subtext = document.getElementById('time-val'); 
     var timeString = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }); 
     banner.className = ''; 
+
+    // Promote feed to settled once enough messages arrived or settle timeout elapsed
+    if (!feedSettled && wsOpenAt && (Date.now() - wsOpenAt >= SETTLE_TIMEOUT_MS)) {
+      feedSettled = true;
+    }
+    var wsIsOpen = socket && socket.readyState === WebSocket.OPEN;
+
     if (minDistance !== Infinity) { 
       title.textContent = 'NEAREST STRIKE: ' + minDistance.toFixed(1) + ' MILES'; 
       subtext.textContent = activeStrikes.length + ' strike(s) in last 15 mins within 40 mi | Updated ' + timeString; 
       if (minDistance < 15.0) { banner.classList.add('status-warning'); } 
       else if (minDistance <= 30.0) { banner.classList.add('status-caution'); } 
       else { banner.classList.add('status-clear'); } 
+    } else if (!wsIsOpen) {
+      // Still connecting / reconnecting — do not claim all-clear
+      title.textContent = 'CONNECTING TO LIGHTNING FEED';
+      subtext.textContent = 'Monitoring 40-mile radius around Lakehurst, NJ | Waiting for live data';
+      banner.classList.add('status-listening');
+    } else if (!feedSettled) {
+      // Socket is open but feed has not proven healthy yet
+      title.textContent = 'LISTENING FOR LIGHTNING';
+      subtext.textContent = 'Verifying live feed within 40 miles of Lakehurst, NJ | Started ' + timeString;
+      banner.classList.add('status-listening');
     } else { 
       title.textContent = 'NO RECENT LIGHTNING STRIKES DETECTED'; 
       subtext.textContent = 'All clear within 40 miles of Lakehurst, NJ | Connected live at ' + timeString; 
