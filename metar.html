@@ -133,10 +133,14 @@
 
         /* Multi-Line Break for Narrow Displays or Portrait */
         @media screen and (max-width: 1100px), screen and (max-aspect-ratio: 1/1), (orientation: portrait) {
+            .metar-bar {
+                padding: 10px 12px 12px 12px !important;
+                gap: 5px !important;
+            }
             .top-row-wrapper {
                 flex-direction: column !important;
                 align-items: flex-start !important;
-                gap: 2px !important;
+                gap: 3px !important;
             }
             .portrait-break {
                 display: flex !important;
@@ -144,10 +148,15 @@
                 align-items: center !important;
                 width: 100%;
             }
-            #val-station { font-size: 46px !important; }
-            .obs-time { font-size: 20px !important; }
-            .category-badge { font-size: 26px !important; }
-            .data-strip { font-size: 26px !important; }
+            #val-station { font-size: 42px !important; }
+            .obs-time { font-size: 18px !important; }
+            .category-badge { font-size: 24px !important; }
+            .data-strip { font-size: 22px !important; }
+            .raw-row {
+                font-size: 18px !important;
+                padding: 5px 10px !important;
+                flex-shrink: 0;
+            }
         }
     </style>
 </head>
