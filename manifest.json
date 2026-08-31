@@ -1,6 +1,12 @@
 {
-  "name": "LKE Aviation Weather",
-  "short_name": "LKE Weather",
+  "name": "LKE Aviation Dashboard",
+  "short_name": "LKE AvWx",
+  "description": "Lakehurst aviation weather, TAF, radar, and lightning display",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b0f19",
+  "theme_color": "#0b0f19",
   "icons": [
     {
       "src": "/Icons/logo152.png",
@@ -12,8 +18,5 @@
       "sizes": "180x180",
       "type": "image/png"
     }
-  ],
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff",
-  "display": "standalone"
+  ]
 }
