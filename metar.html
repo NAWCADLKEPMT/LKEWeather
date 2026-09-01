@@ -42,7 +42,11 @@
             width: 100%;
             line-height: 1.1;
         }
-        .secondary-row { margin-left: 2px; }
+        .secondary-row { 
+            margin-left: 2px; 
+            overflow: hidden;
+            position: relative;
+        }
 
         .top-row-wrapper {
             display: flex;
@@ -57,6 +61,7 @@
             align-items: center;
         }
 
+        /* Raw Row Layout */
         .raw-row {
             font-family: monospace;
             font-size: 24px;
@@ -70,9 +75,17 @@
             align-items: center;
             justify-content: space-between;
             margin-top: auto;
+            overflow: hidden;
         }
-        .raw-row .scroll-container { display: flex; align-items: center; overflow: hidden; flex: 1; }
-        .raw-row .scroll-wrapper { display: flex; align-items: baseline; }
+        .raw-row .raw-container { 
+            display: flex; 
+            align-items: center; 
+            overflow: hidden; 
+            flex: 1; 
+            white-space: nowrap;
+            margin-right: 15px;
+        }
+        
         .station-block { display: flex; align-items: baseline; margin-right: 20px; }
 
         #val-station { font-weight: 900; font-size: 64px; letter-spacing: 1px; line-height: 0.9; }
@@ -103,10 +116,15 @@
             100% { opacity: 0.2; transform: scale(1.05); }
         }
 
-        .data-strip { display: flex; align-items: baseline; font-size: 32px; line-height: 1.5; }
+        .data-strip { display: flex; align-items: baseline; font-size: 32px; line-height: 1.5; flex-shrink: 0; }
         .data-item { display: flex; align-items: baseline; }
         .label { font-weight: 400; opacity: 0.85; margin-right: 6px; }
-        .raw-label { margin-right: 12px; }
+        .raw-label { 
+            margin-right: 12px; 
+            flex-shrink: 0; 
+            font-weight: 700;
+            color: #94a3b8;
+        }
         .val { font-weight: 700; transition: background-color 0.3s; }
         .divider { margin: 0 10px; font-weight: 300; opacity: 0.4; }
 
@@ -123,19 +141,28 @@
         .val.offline { background-color: #475569 !important; color: #ffffff !important; border-color: #1e293b !important; }
         .val.vfr, .val.mvfr, .val.ifr, .val.lifr, .val.offline { padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; line-height: 1.1; border:1px solid black; }
 
-        .scroll-wrapper { display: flex; align-items: center; width: max-content; will-change: transform; }
+        /* Hardware Accelerated Smooth Marquee Base */
+        .scroll-wrapper { 
+            display: flex; 
+            align-items: center; 
+            width: max-content; 
+            will-change: transform;
+            transform: translate3d(0, 0, 0);
+            backface-visibility: hidden;
+        }
 
         .overflow-marquee {
-            animation: marquee-continuous var(--scroll-time) linear infinite;
+            animation: marquee-smooth var(--scroll-time) linear infinite;
         }
-        @keyframes marquee-continuous {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(var(--scroll-dist)); }
+
+        @keyframes marquee-smooth {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(var(--scroll-dist), 0, 0); }
         }
 
         .marquee-spacer {
             display: inline-block;
-            padding-right: 60px;
+            padding-right: 50px;
         }
 
         @media screen and (max-width: 1100px), screen and (max-aspect-ratio: 1/1), (orientation: portrait) {
@@ -190,10 +217,11 @@
                </div>
            </div>
        </div>
+
        <!-- Secondary Data Row -->
-       <div class="metar-row secondary-row" style="overflow: hidden;">
-           <div class="scroll-wrapper">
-               <div class="data-strip">
+       <div class="metar-row secondary-row">
+           <div class="scroll-wrapper" id="secondary-scroll-wrapper">
+               <div class="data-strip" id="secondary-data-strip">
                    <div class="data-item"><div class="label">Wind:</div><div class="val" id="val-wind">--</div></div><div class="divider">|</div>
                    <div class="data-item" id="block-clouds" style="display:none;"><div class="label">Clouds:</div><div class="val" id="val-clouds">--</div></div><div class="divider" id="div-clouds" style="display:none;">|</div>
                    <div class="data-item" id="block-wx" style="display:none;"><div class="label">Wx:</div><div class="val" id="val-wx">--</div></div><div class="divider" id="div-wx" style="display:none;">|</div>
@@ -203,10 +231,14 @@
                </div>
            </div>
        </div>
-       <!-- Raw Data Marquee Row -->
+
+       <!-- Static Label + Marquee Raw METAR Row -->
        <div class="metar-row raw-row">
-           <div class="scroll-container">
-               <div class="scroll-wrapper"><div class="label raw-label">METAR Data:</div><div class="val" id="val-raw" style="color: #f8fafc;">LOADING...</div></div>
+           <div class="raw-label">METAR Data:</div>
+           <div class="raw-container">
+               <div class="scroll-wrapper" id="raw-scroll-wrapper">
+                   <div class="val" id="val-raw" style="color: #f8fafc;">LOADING...</div>
+               </div>
            </div>
            <div id="auto-refresh-countdown" class="auto-refresh-label">↻ 5:00</div>
        </div>
@@ -215,7 +247,6 @@
 <script>
     var container = document.getElementById('metar-container');
     var globalObsDate = new Date();
-    var marqueeTimeout = null;
     var previousCategory = null;
     var flashTimeout = null;
     var lastParsedRaw = "";
@@ -350,6 +381,8 @@
 
         container.className = 'metar-bar offline';
         container.style.opacity = 1;
+        
+        setTimeout(setupAllMarquees, 100);
     }
 
     function handleWorkerPayload(payload) {
@@ -401,13 +434,12 @@
         if (!rawText) return;
         var trimmedRaw = rawText.trim();
 
-        var isNewData = (trimmedRaw !== lastParsedRaw);
         lastParsedRaw = trimmedRaw;
 
-        var p = { raw: trimmedRaw, station: '----', visVal: null, visStr: 'Missing', ceilVal: 99999, ceilStr: 'None', clouds: new Array(), wx: new Array(), tempC: null, dewC: null, tempF: '--', dewF: '--', humidity: '--', windStr: '--', windSpd: 0, windGst: 0, altStr: '--', cat: 'VFR' };
-
-        document.getElementById('val-raw').textContent = p.raw;
+        document.getElementById('val-raw').textContent = trimmedRaw;
         document.getElementById('val-raw').style.color = "#f8fafc";
+
+        var p = { raw: trimmedRaw, station: '----', visVal: null, visStr: 'Missing', ceilVal: 99999, ceilStr: 'None', clouds: new Array(), wx: new Array(), tempC: null, dewC: null, tempF: '--', dewF: '--', humidity: '--', windStr: '--', windSpd: 0, windGst: 0, altStr: '--', cat: 'VFR' };
 
         var vals = document.querySelectorAll('.val');
         for (var i = 0; i < vals.length; i++) {
@@ -574,34 +606,49 @@
         updateTickers();
         container.style.opacity = 1;
 
-        if (isNewData) {
-            if (marqueeTimeout) clearTimeout(marqueeTimeout);
-            marqueeTimeout = setTimeout(function() {
-                var wrappers = document.querySelectorAll('.scroll-wrapper');
-                wrappers.forEach(function(wrapper) {
-                    wrapper.classList.remove('overflow-marquee');
-                    var cloned = wrapper.querySelector('.marquee-clone');
-                    if (cloned) cloned.remove();
+        setTimeout(setupAllMarquees, 100);
+    }
 
-                    var containerEl = wrapper.parentElement;
-                    if (wrapper.scrollWidth > containerEl.clientWidth) {
-                        var clone = wrapper.firstElementChild.cloneNode(true);
-                        clone.classList.add('marquee-clone');
-                        var spacer = document.createElement('span');
-                        spacer.className = 'marquee-spacer';
-                        wrapper.appendChild(spacer);
-                        wrapper.appendChild(clone);
+    function setupMarqueeElement(wrapper, targetContent) {
+        var containerEl = wrapper.parentElement;
 
-                        var scrollDist = wrapper.firstElementChild.offsetWidth + 60;
-                        var duration = scrollDist / 30;
+        // Clear existing clones/spacers to recalculate size safely
+        var existingClones = wrapper.querySelectorAll('.marquee-clone, .marquee-spacer');
+        existingClones.forEach(function(el) { el.remove(); });
+        wrapper.classList.remove('overflow-marquee');
 
-                        wrapper.style.setProperty('--scroll-dist', '-' + scrollDist + 'px');
-                        wrapper.style.setProperty('--scroll-time', duration + 's');
-                        wrapper.classList.add('overflow-marquee');
-                    }
-                });
-            }, 300);
+        var contentWidth = targetContent.offsetWidth;
+        var containerWidth = containerEl.clientWidth;
+
+        if (contentWidth > containerWidth) {
+            var spacer = document.createElement('span');
+            spacer.className = 'marquee-spacer';
+            
+            var clone = targetContent.cloneNode(true);
+            clone.classList.add('marquee-clone');
+            
+            wrapper.appendChild(spacer);
+            wrapper.appendChild(clone);
+
+            var scrollDist = contentWidth + 50; 
+            var speedPixelsPerSecond = 35; 
+            var duration = scrollDist / speedPixelsPerSecond;
+
+            wrapper.style.setProperty('--scroll-dist', '-' + scrollDist + 'px');
+            wrapper.style.setProperty('--scroll-time', duration + 's');
+            wrapper.classList.add('overflow-marquee');
         }
+    }
+
+    function setupAllMarquees() {
+        setupMarqueeElement(
+            document.getElementById('secondary-scroll-wrapper'), 
+            document.getElementById('secondary-data-strip')
+        );
+        setupMarqueeElement(
+            document.getElementById('raw-scroll-wrapper'), 
+            document.getElementById('val-raw')
+        );
     }
 
     function checkCachedData() {
