@@ -78,9 +78,9 @@
                 width: calc((100% - 16px) / 5);
                 min-width: calc((100% - 16px) / 5);
                 max-width: calc((100% - 16px) / 5);
-                padding: 2px 2px 2px;
+                padding: 2px 2px 3px;
                 height: auto;
-                min-height: 110px;
+                min-height: 115px;
             }
             .h-top-row {
                 padding: 2px 2px 0;
@@ -90,7 +90,14 @@
             .wind-arrow { font-size: 26px; }
             .wind-spd { font-size: 20px; }
             .wind-gst { font-size: 14px; }
-            .h-bottom { font-size: clamp(12px, 3.8vw, 17px); gap: 1px; }
+            .h-bottom {
+                font-size: 17px;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 0px 4px;
+                line-height: 1.05;
+            }
+            .h-sep { display: none; }
         }
 
         .hour-card > * {
@@ -253,17 +260,16 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 2px;
-            font-size: clamp(14px, 1.8vw, 21px);
+            gap: 3px;
+            font-size: clamp(15px, 2.2vw, 21px);
             color: #212529;
             white-space: nowrap;
             line-height: 1;
             text-align: center;
-            margin-top: 1px;
+            margin-top: 2px;
             width: 100%;
-            overflow: hidden;
             font-weight: 900;
-            letter-spacing: -0.8px;
+            letter-spacing: -0.5px;
             box-sizing: border-box;
             padding: 0 1px;
         }
@@ -633,7 +639,7 @@
 
         card.appendChild(topRow);
 
-        // Bottom Row (Visibility & Ceiling with Tightened Whitespace)
+        // Bottom Row (Visibility & Ceiling with Adaptive Wrapping)
         var bottom = document.createElement('div');
         bottom.className = 'h-bottom';
 
@@ -659,7 +665,7 @@
 
         bottom.innerHTML =
             '<span class="' + visCls.trim() + '">' + visStr + '</span>' +
-            ' · ' +
+            '<span class="h-sep">·</span>' +
             '<span class="' + cldCls.trim() + '">' + cldStr + '</span>';
         card.appendChild(bottom);
 
