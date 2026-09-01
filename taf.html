@@ -30,11 +30,9 @@
             overflow-x: auto;
             overflow-y: hidden;
             display: flex;
-            /* Content-sized cards — never stretch to fill the iframe (avoids height feedback loop) */
             align-items: center;
-            gap: 5px;
-            padding: 5px 6px;
-            /* Hide scrollbar — scroll via touch / trackpad / wheel */
+            gap: 4px;
+            padding: 4px 5px;
             scrollbar-width: none;
             -ms-overflow-style: none;
             -webkit-overflow-scrolling: touch;
@@ -45,21 +43,15 @@
             height: 0;
         }
 
-        /*
-         * Wide layout: exactly 16 cards fill the viewport width.
-         * Extra forecast hours sit off-screen and can be scrolled to.
-         * 15 gaps × 5px = 75px
-         */
         .hour-card {
-            flex: 0 0 calc((100% - 75px) / 16);
-            width: calc((100% - 75px) / 16);
-            min-width: calc((100% - 75px) / 16);
-            max-width: calc((100% - 75px) / 16);
+            flex: 0 0 calc((100% - 60px) / 16);
+            width: calc((100% - 60px) / 16);
+            min-width: calc((100% - 60px) / 16);
+            max-width: calc((100% - 60px) / 16);
             display: flex;
             flex-direction: column;
-            align-items: center;
             justify-content: space-between;
-            padding: 5px 4px 5px;
+            padding: 2px 2px 2px;
             border-radius: 5px;
             background: #ffffff;
             border: 1px solid #ced4da;
@@ -75,30 +67,30 @@
             background-repeat: no-repeat;
         }
 
-        /* Mobile / narrow: fewer visible cards so each keeps a similar aspect ratio */
         @media screen and (max-width: 1100px), screen and (max-aspect-ratio: 1/1), (orientation: portrait) {
             .hours-scroll {
-                padding: 6px 6px;
-                gap: 5px;
+                padding: 4px 4px;
+                gap: 4px;
                 align-items: center;
             }
             .hour-card {
-                /* ~5 cards visible — closer to the wide-screen card proportions */
-                flex: 0 0 calc((100% - 20px) / 5);
-                width: calc((100% - 20px) / 5);
-                min-width: calc((100% - 20px) / 5);
-                max-width: calc((100% - 20px) / 5);
-                padding: 6px 5px 6px;
+                flex: 0 0 calc((100% - 16px) / 5);
+                width: calc((100% - 16px) / 5);
+                min-width: calc((100% - 16px) / 5);
+                max-width: calc((100% - 16px) / 5);
+                padding: 2px 2px 2px;
                 height: auto;
                 min-height: 110px;
-                justify-content: space-between;
             }
-            .h-time { font-size: 14px; }
-            .h-cat  { font-size: 13px; padding: 2px 6px; }
-            .wind-arrow { font-size: 18px; }
-            .wind-spd { font-size: 14px; }
-            .wind-gst { font-size: 11px; }
-            .h-bottom { font-size: 12px; }
+            .h-top-row {
+                padding: 3px 4px 0;
+            }
+            .h-time { font-size: 24px; }
+            .h-cat  { font-size: 18px; padding: 1px 3px; }
+            .wind-arrow { font-size: 30px; }
+            .wind-spd { font-size: 23px; }
+            .wind-gst { font-size: 15px; }
+            .h-bottom { font-size: 20px; gap: 6px; }
         }
 
         .hour-card > * {
@@ -112,9 +104,7 @@
         .hour-card.bg-ifr  { background-color: #ffebee; border-color: #ef9a9a; }
         .hour-card.bg-lifr { background-color: #fce4ec; border-color: #f48fb1; }
 
-        /* ---------- Static themed weather backgrounds (SVG data-URIs, no animation) ---------- */
-
-        /* RAIN — soft blue with static diagonal rain lines */
+        /* Static themed weather backgrounds */
         .hour-card.wx-rain {
             background-color: #b8d4e8;
             border-color: #5a9bb8;
@@ -122,7 +112,6 @@
             background-size: 28px 28px;
         }
 
-        /* THUNDERSTORM — amber base + static lightning bolt watermark */
         .hour-card.wx-ts {
             background-color: #f0c98a;
             border-color: #c47820;
@@ -131,7 +120,6 @@
             background-position: 70% 60%;
         }
 
-        /* SNOW — cool blue with static soft flakes */
         .hour-card.wx-snow {
             background-color: #c8e0f0;
             border-color: #6aa8d0;
@@ -139,7 +127,6 @@
             background-size: 36px 36px;
         }
 
-        /* FOG / MIST / HAZE — gray with soft horizontal bands */
         .hour-card.wx-fog {
             background-color: #d0d5da;
             border-color: #8e969e;
@@ -147,7 +134,6 @@
             background-size: 70px 35px;
         }
 
-        /* OTHER (dust, sand, smoke, etc.) — warm dusty texture */
         .hour-card.wx-other {
             background-color: #e0d8c8;
             border-color: #a89878;
@@ -165,33 +151,60 @@
             content: attr(data-tempo);
             position: absolute;
             top: 2px;
-            right: 4px;
-            font-size: 11px;
-            font-weight: 800;
+            right: 3px;
+            font-size: 12px;
+            font-weight: 900;
             color: #8a5a00;
             letter-spacing: -0.2px;
             line-height: 1;
             z-index: 3;
         }
 
-        /* Typography — sized for expanded cards (up to 16 across) */
+        /* Two-column layout grid inside each card */
+        .h-top-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            gap: 1px;
+            padding: 2px 3px 0;
+            box-sizing: border-box;
+        }
+
+        .h-col-left {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 1px;
+        }
+
+        .h-col-right {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Typography */
         .h-time {
-            font-size: 15px;
-            font-weight: 700;
+            font-size: 26px;
+            font-weight: 900;
             color: #b45309;
             white-space: nowrap;
-            line-height: 1.1;
+            line-height: 0.95;
+            margin: 0;
+            letter-spacing: -0.8px;
         }
 
         .h-cat {
-            font-size: 14px;
-            font-weight: 800;
-            letter-spacing: 0.3px;
-            padding: 2px 7px;
+            font-size: 19px;
+            font-weight: 900;
+            letter-spacing: -0.3px;
+            padding: 1px 4px;
             border-radius: 3px;
-            margin: 2px 0 0;
-            line-height: 1.25;
-            min-width: 40px;
+            margin-top: 2px;
+            line-height: 1;
             text-align: center;
             color: #ffffff;
             border: 1px solid rgba(0,0,0,0.12);
@@ -207,46 +220,53 @@
             align-items: center;
             gap: 0;
             line-height: 1;
-            margin: 2px 0 0;
         }
         .wind-arrow {
-            font-size: 20px;
+            font-size: 32px;
             color: #212529;
-            line-height: 1;
+            line-height: 0.8;
             display: inline-block;
             transform-origin: center center;
+            font-weight: 900;
         }
         .wind-spd {
-            font-size: 15px;
-            font-weight: 700;
+            font-size: 24px;
+            font-weight: 900;
             color: #212529;
             white-space: nowrap;
+            letter-spacing: -0.8px;
+            margin-top: 0px;
         }
         .wind-gst {
-            font-size: 12px;
+            font-size: 16px;
             color: #dc3545;
-            font-weight: 700;
+            font-weight: 900;
         }
         .wind-unit {
-            font-size: 0.72em;
-            font-weight: 600;
-            opacity: 0.75;
+            font-size: 0.6em;
+            font-weight: 800;
+            opacity: 0.85;
             margin-left: 1px;
         }
 
         .h-bottom {
-            font-size: 13px;
-            color: #343a40;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            font-size: 21px;
+            color: #212529;
             white-space: nowrap;
-            line-height: 1.2;
+            line-height: 1;
             text-align: center;
-            margin-top: 2px;
+            margin-top: 1px;
             max-width: 100%;
             overflow: hidden;
             text-overflow: ellipsis;
-            font-weight: 600;
+            font-weight: 900;
+            letter-spacing: -0.8px;
         }
-        .low-ceil, .low-vis { color: #c82333; font-weight: 800; }
+        .low-ceil, .low-vis { color: #c82333; font-weight: 900; }
 
         .loading-msg, .error-msg {
             width: 100%;
@@ -263,7 +283,7 @@
 <body>
 <div class="strip-container">
     <div class="hours-scroll" id="hours-strip">
-        <div class="loading-msg">Loading forecast…</div>
+        <div class="loading-msg">Loading forecast…[cite: 1]</div>
     </div>
 </div>
 
@@ -299,7 +319,6 @@
         };
     }
 
-    /* Classify significant weather for static themed background */
     function classifyWx(wxCodes) {
         if (!wxCodes || !wxCodes.length) return null;
         var joined = wxCodes.join(' ').toUpperCase();
@@ -372,7 +391,6 @@
                 var spd = parseInt(wMatch[2], 10);
                 var gust = wMatch[3] ? parseInt(wMatch[3].substring(1), 10) : 0;
                 var unit = wMatch[4];
-                /* Always store / display in knots */
                 if (unit === 'MPS') {
                     spd = Math.round(spd * 1.94384);
                     if (gust) gust = Math.round(gust * 1.94384);
@@ -441,7 +459,7 @@
         strip.innerHTML = '';
 
         if (!overallStart || !overallEnd) {
-            strip.innerHTML = '<div class="error-msg">Could not parse TAF time frame</div>';
+            strip.innerHTML = '<div class="error-msg">Could not parse TAF time frame[cite: 1]</div>';
             reportHeightToParent();
             return;
         }
@@ -479,7 +497,6 @@
             loopMs = startMs > currentTopOfHourMs ? startMs : currentTopOfHourMs + hourInMs;
         }
 
-        /* Render full forecast; CSS shows 16 (desktop) or 5 (mobile) with hidden scroll for the rest */
         while (loopMs < endMs) {
             var evalDate = new Date(loopMs);
             var activeBase = null;
@@ -503,7 +520,6 @@
             });
 
             if (activeBase) {
-                /* One card per hour: if TEMPO is active, prefer its values and mark the card */
                 if (activeTempo) {
                     appendCard(strip, evalDate, activeTempo, true, activeBase);
                 } else {
@@ -514,7 +530,6 @@
             loopMs += hourInMs;
         }
 
-        /* One stable height report after cards paint (content-sized, not stretch-based) */
         requestAnimationFrame(function () {
             requestAnimationFrame(function () {
                 reportHeightToParent();
@@ -528,7 +543,6 @@
         try {
             var strip = document.getElementById('hours-strip');
             if (!strip) return;
-            /* Measure intrinsic card height only — cards must NOT stretch with the iframe */
             var cards = strip.querySelectorAll('.hour-card');
             if (!cards.length) return;
             var maxCard = 0;
@@ -539,7 +553,6 @@
             var pad = (parseFloat(styles.paddingTop) || 0) + (parseFloat(styles.paddingBottom) || 0);
             var needed = Math.ceil(maxCard + pad + 2);
             if (needed < 100) needed = 100;
-            /* Only notify parent when the value actually changes (breaks feedback loops) */
             if (Math.abs(needed - _lastReportedHeight) < 3) return;
             _lastReportedHeight = needed;
             if (window.parent && window.parent !== window) {
@@ -559,7 +572,6 @@
         else if (visToUse < 3 || ceilToUse < 10) { flightCat = 'IFR'; catClass = 'cat-ifr'; bgClass = 'bg-ifr'; }
         else if (visToUse <= 5 || ceilToUse <= 30) { flightCat = 'MVFR'; catClass = 'cat-mvfr'; bgClass = 'bg-mvfr'; }
 
-        /* Weather theme takes priority over category tint when present */
         var wxCodes = (dataBlock.wx && dataBlock.wx.length) ? dataBlock.wx :
             (baseBlock && baseBlock.wx ? baseBlock.wx : []);
         var wxKind = classifyWx(wxCodes);
@@ -572,19 +584,30 @@
             card.setAttribute('data-tempo', label);
         }
 
-        // Time
+        // Top Row — 2 Columns
+        var topRow = document.createElement('div');
+        topRow.className = 'h-top-row';
+
+        // Left Column (Time & Category)
+        var leftCol = document.createElement('div');
+        leftCol.className = 'h-col-left';
+
         var timeEl = document.createElement('div');
         timeEl.className = 'h-time';
         timeEl.textContent = formatLocalHour(hourDt);
-        card.appendChild(timeEl);
+        leftCol.appendChild(timeEl);
 
-        // Category badge
         var catEl = document.createElement('div');
         catEl.className = 'h-cat ' + catClass;
         catEl.textContent = flightCat;
-        card.appendChild(catEl);
+        leftCol.appendChild(catEl);
 
-        // Wind
+        topRow.appendChild(leftCol);
+
+        // Right Column (Wind Direction & Speed)
+        var rightCol = document.createElement('div');
+        rightCol.className = 'h-col-right';
+
         var windEl = document.createElement('div');
         windEl.className = 'h-wind';
         var dir = dataBlock.windDir;
@@ -592,9 +615,9 @@
         var gst = dataBlock.windGst;
 
         if (spd === 0 || dataBlock.wind === 'Calm') {
-            windEl.innerHTML = '<div class="wind-spd">Calm</div>';
+            windEl.innerHTML = '<div class="wind-spd" style="font-size:17px; margin-top:10px; font-weight:900;">Calm</div>';
         } else if (dir === null) {
-            windEl.innerHTML = '<div class="wind-arrow" style="font-size:14px">⟳</div>' +
+            windEl.innerHTML = '<div class="wind-arrow" style="font-size:20px">⟳</div>' +
                 '<div class="wind-spd">' + (spd || '—') + '<span class="wind-unit">kt</span>' +
                 (gst ? '<span class="wind-gst">G' + gst + '</span>' : '') + '</div>';
         } else {
@@ -604,9 +627,12 @@
                 '<div class="wind-spd">' + spd + '<span class="wind-unit">kt</span>' +
                 (gst ? '<span class="wind-gst">G' + gst + '</span>' : '') + '</div>';
         }
-        card.appendChild(windEl);
+        rightCol.appendChild(windEl);
+        topRow.appendChild(rightCol);
 
-        // Bottom line: vis · ceiling
+        card.appendChild(topRow);
+
+        // Bottom Row (Visibility & Ceiling with Whitespace)
         var bottom = document.createElement('div');
         bottom.className = 'h-bottom';
 
@@ -632,7 +658,7 @@
 
         bottom.innerHTML =
             '<span class="' + visCls.trim() + '">' + visStr + '</span>' +
-            ' · ' +
+            '&nbsp;·&nbsp;' +
             '<span class="' + cldCls.trim() + '">' + cldStr + '</span>';
         card.appendChild(bottom);
 
@@ -656,7 +682,7 @@
         var tafData = payload && payload.taf ? payload.taf : null;
         if (!tafData || tafData.trim().length === 0) {
             document.getElementById('hours-strip').innerHTML =
-                '<div class="error-msg">No TAF forecast available</div>';
+                '<div class="error-msg">No TAF forecast available[cite: 1]</div>';
             reportHeightToParent();
             return;
         }
@@ -693,14 +719,12 @@
 
     checkCachedData();
 
-    /* Re-report only on real viewport/orientation changes, not on our own height updates */
     var _lastViewportW = window.innerWidth;
     window.addEventListener('resize', function () {
         var w = window.innerWidth;
-        /* Ignore pure height changes caused by the parent resizing our iframe */
         if (Math.abs(w - _lastViewportW) < 2) return;
         _lastViewportW = w;
-        _lastReportedHeight = 0; /* force a fresh report after layout change */
+        _lastReportedHeight = 0;
         clearTimeout(window._tafHTimer);
         window._tafHTimer = setTimeout(reportHeightToParent, 200);
     });
