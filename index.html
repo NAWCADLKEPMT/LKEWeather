@@ -22,25 +22,6 @@
         overflow: hidden;
         box-sizing: border-box;
     }
-
-    /* 3px refresh-cycle progress bar — pinned to the very top */
-    .refresh-progress {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 3px;
-        background-color: rgba(51, 65, 85, 0.55);
-        z-index: 10000;
-        pointer-events: none;
-        overflow: hidden;
-    }
-    .refresh-progress-fill {
-        height: 100%;
-        width: 0%;
-        background: linear-gradient(90deg, #22c55e 0%, #3b82f6 100%);
-        will-change: width;
-    }
  
     .dashboard-container {
         display: flex;
@@ -49,7 +30,6 @@
         height: 100%;
         height: 100dvh;
         padding: 10px;
-        padding-top: 12px; /* leave a sliver so content clears the 3px bar */
         box-sizing: border-box;
         gap: 8px;
     }
@@ -78,7 +58,6 @@
         min-height: 118px;
         flex-shrink: 0;
         background-color: #e9ecef;
-        /* No height transition — animated resize was feeding a measure/grow loop */
     }
  
     /* Lower Content Grid: Radar | Lightning/Traffic */
@@ -111,7 +90,6 @@
             height: 100dvh !important;
             overflow: hidden !important;
             padding: 6px;
-            padding-top: 8px;
             gap: 6px;
         }
 
@@ -121,7 +99,6 @@
         }
 
         .taf-pane {
-            /* Base mobile height; may be raised once via postMessage if content needs more room */
             height: 130px;
             min-height: 130px;
             flex-shrink: 0;
@@ -144,10 +121,6 @@
 </style>
  </head>
  <body>
-  <!-- Refresh-cycle progress (0% at fetch → 100% at 5 min → reset) -->
-  <div class="refresh-progress" aria-hidden="true">
-    <div id="refresh-progress-fill" class="refresh-progress-fill"></div>
-  </div>
 
   <div class="dashboard-container">
    <!-- Top METAR Panel -->
@@ -172,28 +145,32 @@
   </div>
 
   <script>
-    const REFRESH_MS = 300000; // 5 minutes — matches weather fetch interval
+    const REFRESH_MS = 300000; // 5 minutes
     var cycleStart = Date.now();
 
     function resetProgressCycle() {
         cycleStart = Date.now();
-        updateProgressBar();
+        updateCountdown();
     }
 
-    function updateProgressBar() {
-        var fill = document.getElementById('refresh-progress-fill');
-        if (!fill) return;
+    function updateCountdown() {
         var elapsed = Date.now() - cycleStart;
-        var pct = Math.min(100, (elapsed / REFRESH_MS) * 100);
-        fill.style.width = pct + '%';
+        var remainingMs = Math.max(0, REFRESH_MS - elapsed);
+        var totalSec = Math.floor(remainingMs / 1000);
+        var mins = Math.floor(totalSec / 60);
+        var secs = totalSec % 60;
+        var formatted = mins + ':' + (secs < 10 ? '0' : '') + secs;
+
+        const metarFrame = document.getElementById('metar-frame');
+        if (metarFrame && metarFrame.contentWindow) {
+            metarFrame.contentWindow.postMessage({ type: 'COUNTDOWN_UPDATE', formattedTime: formatted }, '*');
+        }
     }
 
-    // Smooth enough for a 3px bar; cheap on a kiosk
-    setInterval(updateProgressBar, 250);
+    setInterval(updateCountdown, 1000);
 
-    // Single Centralized Fetch (Called on Load and Every 5 Minutes)
+    // Single Centralized Fetch
     async function fetchWeatherOnce() {
-        // New cycle starts when we kick off a refresh
         resetProgressCycle();
 
         const targetUrl = 'https://metar-worker.nawcadlkepmt.workers.dev/';
@@ -207,13 +184,11 @@
             if (!response.ok) throw new Error("HTTP " + response.status);
             const payload = await response.json();
             
-            // Save payload to local storage
             localStorage.setItem('cached_weather_payload', JSON.stringify({
                 timestamp: Date.now(),
                 data: payload
             }));
 
-            // Broadcast payload to child iframes (metar.html & taf.html)
             broadcastWeatherData(payload);
         } catch (err) {
             console.error("Central fetch failed:", err);
@@ -233,8 +208,6 @@
         }
     }
 
-    /* Let the TAF strip request more vertical space when card content would clip.
-       Guarded so we only apply on mobile and only when the value actually changes. */
     var _appliedTafHeight = 0;
     window.addEventListener('message', function (event) {
         if (!event.data || event.data.type !== 'TAF_HEIGHT') return;
@@ -248,7 +221,6 @@
         var needed = Math.ceil(Number(event.data.height) || 0);
         if (needed < 100) return;
 
-        /* Cap so radar/lightning still get room on short phones */
         var maxH = Math.floor(window.innerHeight * 0.28);
         var h = Math.min(Math.max(needed, 118), maxH);
 
@@ -258,11 +230,8 @@
         pane.style.minHeight = h + 'px';
     });
 
-    // Initial fetch when page loads
     window.addEventListener('DOMContentLoaded', () => {
         fetchWeatherOnce();
-        
-        // Refresh weather data every 5 minutes (aligned with progress bar cycle)
         setInterval(fetchWeatherOnce, REFRESH_MS);
     });
 
