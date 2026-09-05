@@ -8,7 +8,6 @@
   <link rel="icon" type="image/png" sizes="16x16" href="Icons/favicon-16x16.png">
   <link rel="icon" type="image/x-icon" href="Icons/favicon.ico">
   <link rel="manifest" href="manifest.json">
-  
   <title>LKE Aviation Dashboard</title>
   <style>
     html, body {
@@ -52,7 +51,7 @@
         flex-shrink: 0;
         background-color: #e9ecef;
     }
-
+ 
     /* Horizontal TAF strip directly under METAR — compact light theme */
     .taf-pane {
         height: 118px;
@@ -61,7 +60,7 @@
         background-color: #e9ecef;
     }
  
-    /* Lower Content Grid: Radar | Lightning/Traffic */
+    /* Lower Content Grid: Radar | Lightning/Traffic + NOTAMs */
     .main-content-grid {
         flex: 1 1 0;
         display: grid;
@@ -69,6 +68,33 @@
         grid-template-rows: 1fr;
         gap: 10px;
         min-height: 0;
+    }
+ 
+    .radar-pane {
+        min-height: 0;
+    }
+ 
+    /* Right column: traffic/lightning on top, NOTAM strip below.
+       Radar in the left column is unaffected and keeps full grid height. */
+    .right-stack {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        height: 100%;
+        gap: 8px;
+    }
+ 
+    .lightning-pane {
+        flex: 1 1 0;
+        height: auto;
+        min-height: 0;
+    }
+ 
+    .notam-pane {
+        height: 232px;
+        min-height: 232px;
+        flex-shrink: 0;
+        background-color: #0f172a;
     }
  
     iframe {
@@ -85,7 +111,7 @@
             height: 100% !important;
             height: 100dvh !important;
         }
-
+ 
         .dashboard-container {
             height: 100% !important;
             height: 100dvh !important;
@@ -93,12 +119,12 @@
             padding: 6px;
             gap: 6px;
         }
-
+ 
         .metar-pane {
             height: 185px !important;
             flex-shrink: 0;
         }
-
+ 
         .taf-pane {
             height: 130px;
             min-height: 130px;
@@ -112,48 +138,62 @@
             min-height: 0;
             gap: 6px;
         }
-
-        .main-content-grid > .pane {
+ 
+        .main-content-grid > .radar-pane {
             flex: 1 1 0;
             height: auto;
             min-height: 0;
+        }
+ 
+        .main-content-grid > .right-stack {
+            flex: 1.2 1 0;
+            min-height: 0;
+            gap: 6px;
+        }
+ 
+        .notam-pane {
+            height: 168px;
+            min-height: 168px;
         }
     }
 </style>
  </head>
  <body>
-
   <div class="dashboard-container">
    <!-- Top METAR Panel -->
    <div class="pane metar-pane">
     <iframe id="metar-frame" src="metar.html" title="METAR Display"></iframe>
    </div>
-
    <!-- Horizontal TAF Strip (under METAR) -->
    <div class="pane taf-pane">
     <iframe id="taf-frame" src="taf.html" title="Hourly TAF Forecast"></iframe>
    </div>
-
-   <!-- Main Viewports: Radar | Lightning & Traffic -->
+   <!-- Main Viewports: Radar | Lightning & Traffic + NOTAMs -->
    <div class="main-content-grid">
-    <div class="pane">
-        <iframe src="https://radar.weather.gov/?settings=v1_eyJhZ2VuZGEiOnsiaWQiOiJuYXRpb25hbCIsImNlbnRlciI6Wy03NC43MjUsNDAuMTY1XSwibG9jYXRpb24iOm51bGwsInpvb20iOjcuODU4MjEyNTg3NTk4NzUzLCJsYXllciI6ImJyZWZfcWNkIn0sImFuaW1hdGluZyI6dHJ1ZSwiYmFzZSI6InN0YW5kYXJkIiwiYXJ0Y2MiOmZhbHNlLCJjb3VudHkiOmZhbHNlLCJjd2EiOmZhbHNlLCJyZmMiOmZhbHNlLCJzdGF0ZSI6dHJ1ZSwibWVudSI6dHJ1ZSwic2hvcnRGdXNlZE9ubHkiOnRydWUsIm9wYWNpdHkiOnsiYWxlcnRzIjowLjgsImxvY2FsIjowLjYsImxvY2FsU3RhdGlvbnMiOjAuOCwibmF0aW9uYWwiOjAuODl9fQ%3D%3D" title="NOAA Radar Viewport"></iframe>
+    <div class="pane radar-pane">
+     <iframe id="radar-frame" src="https://radar.weather.gov/?settings=v1_eyJhZ2VuZGEiOnsiaWQiOiJuYXRpb25hbCIsImNlbnRlciI6Wy03NC43MjUsNDAuMTY1XSwibG9jYXRpb24iOm51bGwsInpvb20iOjcuODU4MjEyNTg3NTk4NzUzLCJsYXllciI6ImJyZWZfcWNkIn0sImFuaW1hdGluZyI6dHJ1ZSwiYmFzZSI6InN0YW5kYXJkIiwiYXJ0Y2MiOmZhbHNlLCJjb3VudHkiOmZhbHNlLCJjd2EiOmZhbHNlLCJyZmMiOmZhbHNlLCJzdGF0ZSI6dHJ1ZSwibWVudSI6dHJ1ZSwic2hvcnRGdXNlZE9ubHkiOnRydWUsIm9wYWNpdHkiOnsiYWxlcnRzIjowLjgsImxvY2FsIjowLjYsImxvY2FsU3RhdGlvbnMiOjAuOCwibmF0aW9uYWwiOjAuODl9fQ%3D%3D" title="NOAA Radar Viewport"></iframe>
     </div>
-    <div class="pane">
-     <iframe src="lightning.html" title="Lightning &amp; Traffic Viewport"></iframe>
+    <div class="right-stack">
+     <div class="pane lightning-pane">
+      <iframe id="lightning-frame" src="lightning.html" title="Lightning &amp; Traffic Viewport"></iframe>
+     </div>
+     <div class="pane notam-pane">
+      <iframe id="notam-frame" src="notam.html" title="Active NOTAMs"></iframe>
+     </div>
     </div>
    </div>
   </div>
-
   <script>
     const REFRESH_MS = 300000; // 5 minutes
     var cycleStart = Date.now();
-
+    const METAR_API_KEY = 'hkY^h&%yu787@$HdfDG';
+	const NOTAM_API_KEY = 'ajfdkl#@aADF@feqwof$@#F$fjhiofjaf2ojql$!awfF423';
+ 
     function resetProgressCycle() {
         cycleStart = Date.now();
         updateCountdown();
     }
-
+ 
     function updateCountdown() {
         var elapsed = Date.now() - cycleStart;
         var remainingMs = Math.max(0, REFRESH_MS - elapsed);
@@ -161,26 +201,25 @@
         var mins = Math.floor(totalSec / 60);
         var secs = totalSec % 60;
         var formatted = mins + ':' + (secs < 10 ? '0' : '') + secs;
-
+ 
         const metarFrame = document.getElementById('metar-frame');
         if (metarFrame && metarFrame.contentWindow) {
             metarFrame.contentWindow.postMessage({ type: 'COUNTDOWN_UPDATE', formattedTime: formatted }, '*');
         }
     }
-
+ 
     setInterval(updateCountdown, 1000);
-
+ 
     // Single Centralized Fetch
     async function fetchWeatherOnce() {
         resetProgressCycle();
-
+ 
         const targetUrl = 'https://metar-worker.nawcadlkepmt.workers.dev/';
-        const apiKey = 'hkY^h&%yu787@$HdfDG';
-
+ 
         try {
             const response = await fetch(targetUrl, { 
                 cache: 'no-store',
-                headers: { 'X-API-Key': apiKey }
+                headers: { 'X-API-Key': METAR_API_KEY }
             });
             if (!response.ok) throw new Error("HTTP " + response.status);
             const payload = await response.json();
@@ -189,18 +228,18 @@
                 timestamp: Date.now(),
                 data: payload
             }));
-
+ 
             broadcastWeatherData(payload);
         } catch (err) {
             console.error("Central fetch failed:", err);
             broadcastWeatherData(null);
         }
     }
-
+ 
     function broadcastWeatherData(payload) {
         const metarFrame = document.getElementById('metar-frame');
         const tafFrame = document.getElementById('taf-frame');
-
+ 
         if (metarFrame && metarFrame.contentWindow) {
             metarFrame.contentWindow.postMessage({ type: 'WEATHER_DATA', payload }, '*');
         }
@@ -208,38 +247,250 @@
             tafFrame.contentWindow.postMessage({ type: 'WEATHER_DATA', payload }, '*');
         }
     }
-
+ 
+    // Keep the last NOTAM payload in memory so we can re-push it the moment
+    // the iframe announces it is ready. undefined = fetch has not finished yet.
+    var lastNotamPayload = undefined;
+    var notamRetryTimer = null;
+    const NOTAM_RETRY_MS = 30000;
+ 
+    async function fetchNotamsOnce() {
+        console.log('[DEBUG] Attempting to fetch NOTAMs from server...');
+        const targetUrl = 'https://notam-worker.nawcadlkepmt.workers.dev/notams';
+        const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+        const timeoutId = setTimeout(function () {
+            if (controller) controller.abort();
+        }, 15000);
+ 
+        try {
+            const fetchOpts = {
+                cache: 'no-store',
+                headers: {
+                    'x-api-key': NOTAM_API_KEY
+                }
+            };
+            if (controller) fetchOpts.signal = controller.signal;
+ 
+            const response = await fetch(targetUrl, fetchOpts);
+            clearTimeout(timeoutId);
+            if (!response.ok) throw new Error("HTTP " + response.status + " " + response.statusText);
+            const payload = await response.json();
+ 
+            // --- DEBUG LOGGING ---
+            console.log('[DEBUG] Successfully fetched NOTAM data:', payload);
+ 
+            localStorage.setItem('cached_notam_payload', JSON.stringify({
+                timestamp: Date.now(),
+                data: payload
+            }));
+ 
+            stopNotamRetry();
+            broadcastNotamData(payload);
+        } catch (err) {
+            clearTimeout(timeoutId);
+            // --- DEBUG LOGGING ---
+            console.error("[DEBUG] CRITICAL: The NOTAM fetch failed. Error details:", err);
+            broadcastNotamData(null);
+            startNotamRetry();
+        }
+    }
+ 
+    function startNotamRetry() {
+        if (notamRetryTimer) return;
+        console.warn('[notam] Fetch failed — retrying every 30 seconds');
+        notamRetryTimer = setInterval(fetchNotamsOnce, NOTAM_RETRY_MS);
+    }
+ 
+    function stopNotamRetry() {
+        if (!notamRetryTimer) return;
+        clearInterval(notamRetryTimer);
+        notamRetryTimer = null;
+    }
+ 
+    function broadcastNotamData(payload) {
+        lastNotamPayload = payload;
+        pushNotamsToFrame();
+    }
+ 
+    function pushNotamsToFrame() {
+        const notamFrame = document.getElementById('notam-frame');
+        if (!notamFrame || !notamFrame.contentWindow) return;
+ 
+        var payload = lastNotamPayload;
+        if (typeof payload === 'undefined') {
+            var cached = localStorage.getItem('cached_notam_payload');
+            if (!cached) return;
+            try {
+                payload = JSON.parse(cached).data;
+                lastNotamPayload = payload;
+            } catch (e) {
+                return;
+            }
+        }
+ 
+        try {
+            console.log('[DEBUG] Posting NOTAM data to notam-frame:', payload);
+            notamFrame.contentWindow.postMessage({ type: 'NOTAM_DATA', payload: payload }, '*');
+        } catch (e) {
+            console.error("NOTAM postMessage failed:", e);
+        }
+    }
+ 
+    // Bind immediately (script is at end of body) so we don't miss a
+    // cached iframe that fires 'load' before DOMContentLoaded.
+    (function bindNotamFrameEarly() {
+        var frame = document.getElementById('notam-frame');
+        if (!frame) return;
+        frame.addEventListener('load', function () {
+            pushNotamsToFrame();
+        });
+    })();
+ 
     var _appliedTafHeight = 0;
     window.addEventListener('message', function (event) {
-        if (!event.data || event.data.type !== 'TAF_HEIGHT') return;
+        if (!event.data) return;
+ 
+        // Iframe handshake: push NOTAMs as soon as the child is listening,
+        // and again if it explicitly asks for a resend.
+        if (event.data.type === 'NOTAM_READY' || event.data.type === 'NOTAM_REQUEST') {
+            console.log('[DEBUG] Received ' + event.data.type + ' from child iframe');
+            pushNotamsToFrame();
+            return;
+        }
+ 
+        if (event.data.type !== 'TAF_HEIGHT') return;
         var isMobile = window.matchMedia(
             '(max-width: 1100px), (max-aspect-ratio: 1/1), (orientation: portrait)'
         ).matches;
         if (!isMobile) return;
-
+ 
         var pane = document.querySelector('.taf-pane');
         if (!pane) return;
         var needed = Math.ceil(Number(event.data.height) || 0);
         if (needed < 100) return;
-
+ 
         var maxH = Math.floor(window.innerHeight * 0.28);
         var h = Math.min(Math.max(needed, 118), maxH);
-
+ 
         if (Math.abs(h - _appliedTafHeight) < 3) return;
         _appliedTafHeight = h;
         pane.style.height = h + 'px';
         pane.style.minHeight = h + 'px';
     });
-
+ 
+    // ------------------------------------------------------------------
+    // Per-panel connection-error recovery
+    // - Network/DNS/timeout failures → retry that panel every 5 min
+    // - Same-origin panels: also inspect loaded content for 404 / error
+    //   pages (e.g. "Unable to find the page you requested.") and retry
+    // - Radar (cross-origin): cannot inspect content; instead perform a
+    //   soft reload every 15 minutes to recover stuck error pages
+    // ------------------------------------------------------------------
+    const PANEL_RETRY_MS = 5 * 60 * 1000;      // 5 minutes
+    const RADAR_SOFT_RELOAD_MS = 15 * 60 * 1000; // 15 minutes
+    const panelRetryTimers = {};               // id -> intervalId
+ 
+    function reloadPanel(iframe) {
+        if (!iframe) return;
+        const currentSrc = iframe.getAttribute('src') || iframe.src;
+        iframe.src = currentSrc;
+        console.log('[panel-retry] Reloading panel:', iframe.id || currentSrc);
+    }
+ 
+    function startPanelRetry(iframe) {
+        const id = iframe.id;
+        if (!id) return;
+        if (panelRetryTimers[id]) return;
+ 
+        console.warn('[panel-retry] Error detected for', id,
+                     '— will retry every 5 minutes');
+        panelRetryTimers[id] = setInterval(function () {
+            reloadPanel(iframe);
+        }, PANEL_RETRY_MS);
+    }
+ 
+    function stopPanelRetry(iframe) {
+        const id = iframe.id;
+        if (!id || !panelRetryTimers[id]) return;
+        clearInterval(panelRetryTimers[id]);
+        delete panelRetryTimers[id];
+        console.log('[panel-retry] Panel recovered:', id);
+    }
+ 
+    function isErrorPage(iframe) {
+        try {
+            const doc = iframe.contentDocument ||
+                        (iframe.contentWindow && iframe.contentWindow.document);
+            if (!doc) return false;
+ 
+            const bodyText = (doc.body && doc.body.innerText) ? doc.body.innerText : '';
+            const title = doc.title || '';
+            const combined = (bodyText + ' ' + title).toLowerCase();
+ 
+            if (combined.includes('unable to find the page you requested')) return true;
+            if (combined.includes('404 not found')) return true;
+            if (combined.includes('page not found')) return true;
+            if (combined.includes('404 - file or directory not found')) return true;
+            if (combined.includes('the page you are looking for')) return true;
+            if (combined.includes('this page could not be found')) return true;
+ 
+            if (title && /404|not found|error/i.test(title) && bodyText.length < 800) {
+                return true;
+            }
+ 
+            return false;
+        } catch (e) {
+            return false;
+        }
+    }
+ 
+    function setupPanelErrorRecovery(iframe) {
+        if (!iframe) return;
+ 
+        iframe.addEventListener('error', function () {
+            startPanelRetry(iframe);
+        });
+ 
+        iframe.addEventListener('load', function () {
+            setTimeout(function () {
+                if (isErrorPage(iframe)) {
+                    console.warn('[panel-retry] Error-page content detected in', iframe.id);
+                    startPanelRetry(iframe);
+                } else {
+                    stopPanelRetry(iframe);
+                }
+            }, 400);
+        });
+    }
+ 
+    function setupRadarSoftReload() {
+        const radar = document.getElementById('radar-frame');
+        if (!radar) return;
+ 
+        setInterval(function () {
+            console.log('[radar-soft-reload] Periodic soft reload of radar panel');
+            reloadPanel(radar);
+        }, RADAR_SOFT_RELOAD_MS);
+    }
+ 
     window.addEventListener('DOMContentLoaded', () => {
         fetchWeatherOnce();
+        fetchNotamsOnce();
         setInterval(fetchWeatherOnce, REFRESH_MS);
+        setInterval(fetchNotamsOnce, REFRESH_MS);
+ 
+        ['metar-frame', 'taf-frame', 'radar-frame', 'lightning-frame', 'notam-frame']
+            .forEach(function (id) {
+                setupPanelErrorRecovery(document.getElementById(id));
+            });
+ 
+        setupRadarSoftReload();
     });
-
+ 
     (function setupIdleRefresh() {
       const IDLE_TIMEOUT = 5 * 60 * 1000;
       let hiddenStartTime = null;
-
+ 
       document.addEventListener("visibilitychange", () => {
         if (document.hidden) {
           hiddenStartTime = Date.now();
