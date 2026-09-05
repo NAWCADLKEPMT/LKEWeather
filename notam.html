@@ -1,9 +1,9 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
- <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
         html, body {
             margin: 0;
             padding: 0;
@@ -15,7 +15,7 @@
             box-sizing: border-box;
             color: #111827;
         }
- 
+
         .notam-shell {
             width: 100%;
             height: 100%;
@@ -25,7 +25,7 @@
             background: #e9ecef;
             min-height: 0;
         }
- 
+
         .notam-header {
             display: flex;
             align-items: center;
@@ -38,7 +38,7 @@
             min-height: 34px;
             box-sizing: border-box;
         }
- 
+
         .header-left {
             display: flex;
             align-items: center;
@@ -46,7 +46,7 @@
             min-width: 0;
             flex: 1 1 auto;
         }
- 
+
         .notam-badge {
             display: inline-flex;
             align-items: center;
@@ -61,7 +61,7 @@
             line-height: 1.2;
             flex-shrink: 0;
         }
- 
+
         .location-chip {
             font-size: 17px;
             font-weight: 900;
@@ -69,7 +69,7 @@
             letter-spacing: 0.8px;
             flex-shrink: 0;
         }
- 
+
         .header-center {
             display: flex;
             flex-direction: column;
@@ -77,7 +77,7 @@
             gap: 2px;
             flex: 0 0 auto;
         }
- 
+
         .counter {
             font-size: 15px;
             font-weight: 900;
@@ -85,14 +85,14 @@
             color: #1f2937;
             white-space: nowrap;
         }
- 
+
         .dot-row {
             display: flex;
             align-items: center;
             gap: 5px;
             height: 8px;
         }
- 
+
         .dot {
             width: 8px;
             height: 8px;
@@ -106,7 +106,7 @@
             border-color: #b45309;
             transform: scale(1.3);
         }
- 
+
         .header-right {
             display: flex;
             align-items: center;
@@ -114,7 +114,7 @@
             flex: 1 1 auto;
             min-width: 0;
         }
- 
+
         .fetched-label {
             font-size: 13px;
             font-weight: 700;
@@ -122,7 +122,7 @@
             letter-spacing: 0.3px;
             white-space: nowrap;
         }
- 
+
         .progress-track {
             height: 3px;
             background: #cbd5e1;
@@ -143,7 +143,7 @@
             from { transform: scaleX(0); }
             to   { transform: scaleX(1); }
         }
- 
+
         .table-wrap {
             flex: 1 1 0;
             min-height: 0;
@@ -153,7 +153,7 @@
             padding: 0;
             box-sizing: border-box;
         }
- 
+
         .notam-table {
             width: 100%;
             height: 100%;
@@ -166,7 +166,7 @@
         .notam-table.fade {
             opacity: 0;
         }
- 
+
         .notam-table th {
             background: #d1d5db;
             color: #374151;
@@ -181,7 +181,7 @@
             height: 24px;
             box-sizing: border-box;
         }
- 
+
         .notam-table tbody tr {
             height: 33.333%;
             border-bottom: 1px solid #cbd5e1;
@@ -196,19 +196,19 @@
         .notam-table tbody tr.empty-filler-row {
             background-color: transparent;
         }
- 
+
         .notam-table td {
             vertical-align: middle;
             padding: 3px 10px;
             box-sizing: border-box;
         }
- 
+
         /* Compact side columns; Expanded text column */
         .col-id    { width: 11%; }
         .col-start { width: 14%; }
         .col-end   { width: 14%; }
         .col-text  { width: 61%; }
- 
+
         .id-container {
             display: flex;
             flex-direction: column;
@@ -222,7 +222,7 @@
             white-space: nowrap;
             letter-spacing: 0.2px;
         }
- 
+
         /* High-Contrast Badges */
         .status-chip {
             font-size: 10px;
@@ -244,7 +244,7 @@
             color: #ffffff;
             border: 1px solid #075985;
         }
- 
+
         .when-cell {
             display: flex;
             flex-direction: column;
@@ -270,20 +270,21 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
- 
-        /* Continuous Marquee */
+
+        /* Text Wrapping & Conditional Marquee */
         .text-scroll-wrapper {
             width: 100%;
             overflow: hidden;
             position: relative;
-            white-space: nowrap;
         }
         .marquee-track {
-            display: inline-flex;
-            white-space: nowrap;
+            display: block;
+            width: 100%;
             will-change: transform;
         }
         .marquee-track.running {
+            display: inline-flex;
+            white-space: nowrap;
             animation: marquee-loop 16s linear infinite;
         }
         @keyframes marquee-loop {
@@ -295,10 +296,14 @@
             font-weight: 800;
             color: #0f172a;
             line-height: 1.2;
-            display: inline-block;
-            white-space: nowrap;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal !important;
         }
- 
+
         /* Empty / Error / Loading States */
         .empty-state, .error-state, .loading-state {
             flex: 1;
@@ -331,7 +336,7 @@
             font-weight: 800;
             color: #4b5563;
         }
- 
+
         @media screen and (max-width: 1100px), screen and (max-aspect-ratio: 1/1), (orientation: portrait) {
             .notam-header { padding: 3px 6px; gap: 4px; min-height: 30px; }
             .notam-badge { font-size: 11px; padding: 1px 5px; }
@@ -342,38 +347,40 @@
             .notam-table td { padding: 2px 6px; }
             .notam-num { font-size: 14px; }
             .when-date-time { font-size: 13px; }
-            .plain-text { font-size: 15px !important; }
+            .plain-text { font-size: 15px !important; white-space: normal !important; }
             .col-id { width: 14%; }
             .col-start { width: 17%; }
             .col-end { width: 17%; }
             .col-text { width: 52%; }
         }
     </style>
- </head>
- <body>
-  <div class="notam-shell" id="shell">
-   <div class="notam-header">
-    <div class="header-left">
-     <span class="notam-badge">NOTAM</span> <span class="location-chip" id="val-location">KNEL</span>
+</head>
+<body>
+<div class="notam-shell" id="shell">
+    <div class="notam-header">
+        <div class="header-left">
+            <span class="notam-badge">NOTAM</span>
+            <span class="location-chip" id="val-location">KNEL</span>
+        </div>
+        <div class="header-center">
+            <div class="counter" id="val-counter">PAGE 0 / 0</div>
+            <div class="dot-row" id="dot-row"></div>
+        </div>
+        <div class="header-right">
+            <span class="fetched-label" id="val-fetched">Waiting for data…</span>
+        </div>
     </div>
-    <div class="header-center">
-     <div class="counter" id="val-counter">PAGE 0 / 0</div>
-     <div class="dot-row" id="dot-row"></div>
+    <div class="progress-track">
+        <div class="progress-fill" id="progress-fill"></div>
     </div>
-    <div class="header-right">
-     <span class="fetched-label" id="val-fetched">Waiting for data…</span>
+    <div class="table-wrap" id="table-wrap">
+        <div class="loading-state">
+            <div class="loading-title">Loading active NOTAMs…</div>
+        </div>
     </div>
-   </div>
-   <div class="progress-track">
-    <div class="progress-fill" id="progress-fill"></div>
-   </div>
-   <div class="table-wrap" id="table-wrap">
-    <div class="loading-state">
-     <div class="loading-title">Loading active NOTAMs…</div>
-    </div>
-   </div>
-  </div>
-  <script>
+</div>
+
+<script>
     var PAGE_SIZE = 3;
     var ROTATE_MS = 20000;
     var notams = [];
@@ -383,16 +390,16 @@
     var lastPayloadOk = false;
     var fetchedAtIso = null;
     var locationCode = 'KNEL';
- 
+
     var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
- 
+
     window.addEventListener('message', function (event) {
         if (!event.data) return;
         if (event.data.type === 'NOTAM_DATA') {
             handlePayload(event.data.payload);
         }
     });
- 
+
     function notifyParent(type) {
         try {
             if (window.parent && window.parent !== window) {
@@ -400,27 +407,27 @@
             }
         } catch (e) {}
     }
- 
+
     function hasDisplayableData() {
         return lastPayloadOk || notams.length > 0;
     }
- 
+
     function pad2(n) {
         return n < 10 ? '0' + n : String(n);
     }
- 
+
     function formatEasternTime(iso) {
         if (!iso) return { date: 'PERM', time: '', raw: 'PERM' };
         var d = new Date(iso);
         if (isNaN(d.getTime())) return { date: '--', time: '', raw: '--' };
- 
+
         try {
             var dateStr = d.toLocaleDateString('en-US', {
                 timeZone: 'America/New_York',
                 day: '2-digit',
                 month: 'short'
             });
- 
+
             var timeStr = d.toLocaleTimeString('en-US', {
                 timeZone: 'America/New_York',
                 hour: 'numeric',
@@ -433,7 +440,7 @@
             return { date: 'Error', time: '', raw: '' };
         }
     }
- 
+
     function formatFetched(iso) {
         if (!iso) return '';
         var d = new Date(iso);
@@ -449,7 +456,7 @@
             return 'Updated ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
         }
     }
- 
+
     function formatSchedule(raw) {
         if (!raw) return '';
         var s = String(raw);
@@ -459,7 +466,7 @@
         s = s.replace(/(\d{4})-(\d{4})/, '$1–$2Z');
         return s.trim();
     }
- 
+
     function isCancellation(notam, translations) {
         if (!notam) return true;
         var type = String(notam.type || '').toUpperCase();
@@ -474,7 +481,7 @@
         }
         return false;
     }
- 
+
     function extractNotams(payload) {
         var features = [];
         try {
@@ -491,10 +498,10 @@
             features = [];
         }
         if (!Array.isArray(features)) features = [];
- 
+
         var now = Date.now();
         var list = [];
- 
+
         for (var i = 0; i < features.length; i++) {
             var f = features[i];
             var core = f && f.properties && f.properties.coreNOTAMData;
@@ -502,17 +509,17 @@
             var n = core.notam;
             var translations = core.notamTranslation || [];
             if (isCancellation(n, translations)) continue;
- 
+
             if (n.effectiveEnd) {
                 var endMs = new Date(n.effectiveEnd).getTime();
                 if (!isNaN(endMs) && endMs <= now) continue;
             }
- 
+
             var number = n.number || '';
             if (!number && n.series && n.year) {
                 number = n.series + '????/' + String(n.year).slice(-2);
             }
- 
+
             list.push({
                 id: n.id || (number + '-' + (n.issued || i)),
                 number: number || ('NOTAM ' + (i + 1)),
@@ -524,7 +531,7 @@
                 location: n.icaoLocation || n.location || locationCode
             });
         }
- 
+
         list.sort(function (a, b) {
             var aStart = new Date(a.start).getTime() || 0;
             var bStart = new Date(b.start).getTime() || 0;
@@ -535,10 +542,10 @@
             var bIssued = new Date(b.issued || b.start).getTime() || 0;
             return bIssued - aIssued;
         });
- 
+
         return list;
     }
- 
+
     function stopRotation() {
         if (rotateTimer) {
             clearInterval(rotateTimer);
@@ -547,7 +554,7 @@
         var bar = document.getElementById('progress-fill');
         if (bar) bar.classList.remove('running');
     }
- 
+
     function restartProgress(totalPages) {
         var bar = document.getElementById('progress-fill');
         if (!bar) return;
@@ -557,7 +564,7 @@
             bar.classList.add('running');
         }
     }
- 
+
     function startRotation(totalPages) {
         stopRotation();
         if (totalPages <= 1) {
@@ -572,7 +579,7 @@
             showPage((currentPage + 1) % total, true);
         }, ROTATE_MS);
     }
- 
+
     function buildDots(count, active) {
         var row = document.getElementById('dot-row');
         row.innerHTML = '';
@@ -583,7 +590,7 @@
             row.appendChild(d);
         }
     }
- 
+
     function showEmpty(kind, title, sub) {
         stopRotation();
         document.getElementById('val-counter').textContent = 'PAGE 0 / 0';
@@ -604,41 +611,48 @@
         }
         wrap.appendChild(box);
     }
- 
+
     function setupMarquee(track) {
         if (!track) return;
-        var wrapper = track.parentElement;
         var firstSpan = track.querySelector('.plain-text');
         if (!firstSpan) return;
- 
+
         var spans = track.querySelectorAll('.plain-text');
         for (var i = 1; i < spans.length; i++) {
             spans[i].remove();
         }
         track.classList.remove('running');
- 
-        if (firstSpan.offsetWidth > wrapper.clientWidth) {
+        track.style.animationDuration = '';
+
+        if (firstSpan.scrollHeight > firstSpan.clientHeight + 2) {
             firstSpan.style.paddingRight = '60px';
+            firstSpan.style.display = 'inline-block';
+            firstSpan.style.webkitLineClamp = 'unset';
+            firstSpan.style.whiteSpace = 'nowrap';
+            
             var clone = firstSpan.cloneNode(true);
             track.appendChild(clone);
- 
+
             var fullWidth = firstSpan.offsetWidth;
             var duration = Math.max(10, Math.round(fullWidth / 45));
             track.style.animationDuration = duration + 's';
             track.classList.add('running');
         } else {
             firstSpan.style.paddingRight = '0';
+            firstSpan.style.display = '-webkit-box';
+            firstSpan.style.webkitLineClamp = '2';
+            firstSpan.style.whiteSpace = 'normal';
         }
     }
- 
+
     function populatePageTable(pageItems) {
         var wrap = document.getElementById('table-wrap');
         wrap.innerHTML = '';
- 
+
         var table = document.createElement('table');
         table.className = 'notam-table';
         table.id = 'notam-table';
- 
+
         var thead = document.createElement('thead');
         var hr = document.createElement('tr');
         var headers = [
@@ -655,26 +669,25 @@
         }
         thead.appendChild(hr);
         table.appendChild(thead);
- 
+
         var tbody = document.createElement('tbody');
- 
-        // Render available items
+
         for (var i = 0; i < pageItems.length; i++) {
             var item = pageItems[i];
             var row = document.createElement('tr');
             row.className = 'item-row';
- 
+
             // --- Column 1: ID & Status ---
             var tdId = document.createElement('td');
             tdId.className = 'col-id';
             var idContainer = document.createElement('div');
             idContainer.className = 'id-container';
- 
+
             var numSpan = document.createElement('span');
             numSpan.className = 'notam-num';
             numSpan.textContent = item.number || '——';
             idContainer.appendChild(numSpan);
- 
+
             var startMs = item.start ? new Date(item.start).getTime() : 0;
             var isFuture = startMs && startMs > Date.now();
             var chip = document.createElement('span');
@@ -688,7 +701,7 @@
             idContainer.appendChild(chip);
             tdId.appendChild(idContainer);
             row.appendChild(tdId);
- 
+
             // --- Column 2: Effective Start ---
             var startFmt = formatEasternTime(item.start);
             var tdStart = document.createElement('td');
@@ -701,7 +714,7 @@
             startBox.appendChild(startDt);
             tdStart.appendChild(startBox);
             row.appendChild(tdStart);
- 
+
             // --- Column 3: Effective End ---
             var endFmt = formatEasternTime(item.end);
             var tdEnd = document.createElement('td');
@@ -720,8 +733,8 @@
             }
             tdEnd.appendChild(endBox);
             row.appendChild(tdEnd);
- 
-            // --- Column 4: Text with Marquee ---
+
+            // --- Column 4: Text with Wrapping / Marquee ---
             var tdText = document.createElement('td');
             tdText.className = 'col-text';
             var scrollWrapper = document.createElement('div');
@@ -735,11 +748,10 @@
             scrollWrapper.appendChild(track);
             tdText.appendChild(scrollWrapper);
             row.appendChild(tdText);
- 
+
             tbody.appendChild(row);
         }
- 
-        // Fill remaining slots with empty rows to lock top alignment
+
         for (var k = pageItems.length; k < PAGE_SIZE; k++) {
             var emptyRow = document.createElement('tr');
             emptyRow.className = 'empty-filler-row';
@@ -749,30 +761,30 @@
             emptyRow.appendChild(tdEmpty);
             tbody.appendChild(emptyRow);
         }
- 
+
         table.appendChild(tbody);
         wrap.appendChild(table);
     }
- 
+
     function updateHeader(pageIndex, totalPages) {
         document.getElementById('val-location').textContent = locationCode;
         document.getElementById('val-counter').textContent = 'PAGE ' + (pageIndex + 1) + ' / ' + totalPages;
- 
+
         if (fetchedAtIso) {
             document.getElementById('val-fetched').textContent = formatFetched(fetchedAtIso);
         }
- 
+
         buildDots(totalPages, pageIndex);
     }
- 
+
     function showPage(pageIndex, animate) {
         if (!notams.length) return;
         var totalPages = Math.ceil(notams.length / PAGE_SIZE);
         currentPage = ((pageIndex % totalPages) + totalPages) % totalPages;
- 
+
         var startIdx = currentPage * PAGE_SIZE;
         var pageItems = notams.slice(startIdx, startIdx + PAGE_SIZE);
- 
+
         var applyContent = function() {
             populatePageTable(pageItems);
             updateHeader(currentPage, totalPages);
@@ -784,7 +796,7 @@
                 }
             }, 60);
         };
- 
+
         if (animate) {
             var existing = document.getElementById('notam-table');
             if (existing) existing.classList.add('fade');
@@ -794,7 +806,7 @@
             applyContent();
         }
     }
- 
+
     function handlePayload(payload) {
         if (!payload || payload.ok === false) {
             if (notams.length) return;
@@ -803,27 +815,27 @@
             showEmpty('error-state', 'NOTAM FEED OFFLINE', 'Unable to reach FAA NMS. Retrying with dashboard refresh.');
             return;
         }
- 
+
         lastPayloadOk = true;
         locationCode = payload.location || 'KNEL';
         fetchedAtIso = payload.fetchedAt || new Date().toISOString();
         document.getElementById('val-location').textContent = locationCode;
         document.getElementById('val-fetched').textContent = formatFetched(fetchedAtIso);
- 
+
         notams = extractNotams(payload);
- 
+
         if (!notams.length) {
             showEmpty('empty-state', 'NO ACTIVE NOTAMs', 'No current or upcoming NOTAMs for ' + locationCode);
             return;
         }
- 
+
         var totalPages = Math.ceil(notams.length / PAGE_SIZE);
         if (currentPage >= totalPages) currentPage = 0;
- 
+
         showPage(currentPage, false);
         startRotation(totalPages);
     }
- 
+
     function checkCachedData() {
         var cached = localStorage.getItem('cached_notam_payload');
         if (!cached) return;
@@ -832,19 +844,19 @@
             if (parsed && parsed.data) handlePayload(parsed.data);
         } catch (e) {}
     }
- 
+
     checkCachedData();
     notifyParent('NOTAM_READY');
     setTimeout(function () { if (!hasDisplayableData()) notifyParent('NOTAM_READY'); }, 150);
     setTimeout(function () { if (!hasDisplayableData()) notifyParent('NOTAM_READY'); }, 600);
- 
+
     setTimeout(function () {
         if (hasDisplayableData()) return;
         notifyParent('NOTAM_REQUEST');
         var label = document.getElementById('val-fetched');
         if (label) label.textContent = 'Waiting for parent feed…';
     }, 2500);
- 
+
     setTimeout(function () {
         if (hasDisplayableData()) return;
         notifyParent('NOTAM_REQUEST');
@@ -855,5 +867,5 @@
         );
     }, 8000);
 </script>
- </body>
+</body>
 </html>
