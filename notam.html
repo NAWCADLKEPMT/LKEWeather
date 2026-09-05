@@ -1,158 +1,619 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
- <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Active NOTAMs</title>
-  <style>
-    html, body {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        height: 100%;
-        background-color: #0f172a;
-        color: #f8fafc;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        overflow: hidden;
-        box-sizing: border-box;
-    }
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #e9ecef;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            box-sizing: border-box;
+            color: #111827;
+        }
 
-    .notam-container {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        height: 100%;
-        padding: 10px 14px;
-        box-sizing: border-box;
-        justify-content: space-between;
-    }
+        .notam-shell {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            background: #e9ecef;
+            min-height: 0;
+        }
 
-    .notam-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        font-size: 13px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: #94a3b8;
-        border-bottom: 1px solid #334155;
-        padding-bottom: 4px;
-        flex-shrink: 0;
-    }
+        .notam-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 4px 12px;
+            background: #d1d5db;
+            border-bottom: 2px solid #9ca3af;
+            flex-shrink: 0;
+            min-height: 34px;
+            box-sizing: border-box;
+        }
 
-    .notam-count {
-        background-color: #334155;
-        color: #38bdf8;
-        padding: 1px 6px;
-        border-radius: 4px;
-        font-size: 11px;
-    }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+            flex: 1 1 auto;
+        }
 
-    .notam-body {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        overflow: hidden;
-        position: relative;
-        min-height: 0;
-    }
+        .notam-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #f59e0b;
+            color: #1c1917;
+            font-weight: 900;
+            font-size: 14px;
+            letter-spacing: 1px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            line-height: 1.2;
+            flex-shrink: 0;
+        }
 
-    .text-scroll-wrapper {
-        width: 100%;
-        overflow: hidden;
-        position: relative;
-    }
+        .location-chip {
+            font-size: 17px;
+            font-weight: 900;
+            color: #1f2937;
+            letter-spacing: 0.8px;
+            flex-shrink: 0;
+        }
 
-    .marquee-track {
-        display: block;
-        width: 100%;
-        will-change: transform;
-    }
+        .header-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            flex: 0 0 auto;
+        }
 
-    .marquee-track.running {
-        display: inline-flex;
-        white-space: nowrap;
-        animation: marquee-loop 16s linear infinite;
-    }
+        .counter {
+            font-size: 15px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            color: #1f2937;
+            white-space: nowrap;
+        }
 
-    @keyframes marquee-loop {
-        0%   { transform: translateX(0); }
-        100% { transform: translateX(-50%); }
-    }
+        .dot-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            height: 8px;
+        }
 
-    .plain-text {
-        font-size: 21px !important;
-        font-weight: 800;
-        color: #f8fafc;
-        line-height: 1.2;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: normal !important;
-    }
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #9ca3af;
+            border: 1px solid #6b7280;
+            transition: background 0.25s, transform 0.25s, border-color 0.25s;
+        }
+        .dot.current {
+            background: #d97706;
+            border-color: #b45309;
+            transform: scale(1.3);
+        }
 
-    .notam-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 12px;
-        color: #64748b;
-        border-top: 1px solid #1e293b;
-        padding-top: 4px;
-        flex-shrink: 0;
-    }
+        .header-right {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            flex: 1 1 auto;
+            min-width: 0;
+        }
 
-    .notam-nav-btn {
-        background: #1e293b;
-        border: 1px solid #334155;
-        color: #94a3b8;
-        padding: 2px 8px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 11px;
-        font-weight: 600;
-    }
+        .fetched-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #4b5563;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
 
-    .notam-nav-btn:hover {
-        background: #334155;
-        color: #f8fafc;
-    }
-  </style>
- </head>
- <body>
-  <div class="notam-container">
-   <div class="notam-header">
-    <span>Active NOTAMs</span>
-    <span id="notam-counter" class="notam-count">0 / 0</span>
-   </div>
+        .progress-track {
+            height: 3px;
+            background: #cbd5e1;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+            transform: scaleX(0);
+            transform-origin: left center;
+        }
+        .progress-fill.running {
+            animation: notam-progress 20s linear forwards;
+        }
+        @keyframes notam-progress {
+            from { transform: scaleX(0); }
+            to   { transform: scaleX(1); }
+        }
 
-   <div class="notam-body">
-    <div class="text-scroll-wrapper" id="scroll-wrapper">
-     <div class="marquee-track" id="marquee-track">
-      <div class="plain-text" id="notam-text">Awaiting NOTAM data...</div>
-     </div>
+        .table-wrap {
+            flex: 1 1 0;
+            min-height: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .notam-table {
+            width: 100%;
+            height: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            opacity: 1;
+            transition: opacity 0.28s ease;
+            box-sizing: border-box;
+        }
+        .notam-table.fade {
+            opacity: 0;
+        }
+
+        .notam-table th {
+            background: #d1d5db;
+            color: #374151;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            text-align: left;
+            padding: 3px 10px;
+            border-bottom: 2px solid #adb5bd;
+            white-space: nowrap;
+            height: 24px;
+            box-sizing: border-box;
+        }
+
+        .notam-table tbody tr {
+            height: 33.333%;
+            border-bottom: 1px solid #cbd5e1;
+            box-sizing: border-box;
+        }
+        .notam-table tbody tr:last-child {
+            border-bottom: none;
+        }
+        .notam-table tbody tr.item-row:nth-child(even) {
+            background-color: #f1f5f9;
+        }
+        .notam-table tbody tr.empty-filler-row {
+            background-color: transparent;
+        }
+
+        .notam-table td {
+            vertical-align: middle;
+            padding: 3px 10px;
+            box-sizing: border-box;
+        }
+
+        /* Compact side columns; Expanded text column */
+        .col-id    { width: 11%; }
+        .col-start { width: 14%; }
+        .col-end   { width: 14%; }
+        .col-text  { width: 61%; }
+
+        .id-container {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            align-items: flex-start;
+        }
+        .notam-num {
+            font-size: 17px;
+            font-weight: 900;
+            color: #0f172a;
+            white-space: nowrap;
+            letter-spacing: 0.2px;
+        }
+
+        /* High-Contrast Badges */
+        .status-chip {
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 0.7px;
+            padding: 1px 6px;
+            border-radius: 3px;
+            text-transform: uppercase;
+            display: inline-block;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .status-active {
+            background: #15803d;
+            color: #ffffff;
+            border: 1px solid #166534;
+        }
+        .status-scheduled {
+            background: #0369a1;
+            color: #ffffff;
+            border: 1px solid #075985;
+        }
+
+        .when-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+        .when-date-time {
+            font-size: 16px;
+            font-weight: 900;
+            color: #0f172a;
+            white-space: nowrap;
+        }
+        .when-time-part {
+            color: #0369a1;
+            font-weight: 800;
+            margin-left: 3px;
+        }
+        .when-sched {
+            font-size: 11px;
+            font-weight: 700;
+            color: #b45309;
+            line-height: 1.1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Text Wrapping & Conditional Marquee */
+        .text-scroll-wrapper {
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+        .marquee-track {
+            display: block;
+            width: 100%;
+            will-change: transform;
+        }
+        .marquee-track.running {
+            display: inline-flex;
+            white-space: nowrap;
+            animation: marquee-loop 16s linear infinite;
+        }
+        @keyframes marquee-loop {
+            0%   { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .plain-text {
+            font-size: 21px !important;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.2;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal !important;
+        }
+
+        /* Empty / Error / Loading States */
+        .empty-state, .error-state, .loading-state {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 16px;
+            text-align: center;
+        }
+        .empty-title {
+            font-size: 18px;
+            font-weight: 900;
+            color: #15803d;
+            letter-spacing: 0.4px;
+        }
+        .empty-sub {
+            font-size: 13px;
+            font-weight: 700;
+            color: #4b5563;
+        }
+        .error-title {
+            font-size: 18px;
+            font-weight: 900;
+            color: #b91c1c;
+        }
+        .loading-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: #4b5563;
+        }
+
+        @media screen and (max-width: 1100px), screen and (max-aspect-ratio: 1/1), (orientation: portrait) {
+            .notam-header { padding: 3px 6px; gap: 4px; min-height: 30px; }
+            .notam-badge { font-size: 11px; padding: 1px 5px; }
+            .location-chip { font-size: 14px; }
+            .counter { font-size: 12px; }
+            .fetched-label { font-size: 11px; }
+            .notam-table th { font-size: 10px; padding: 2px 6px; }
+            .notam-table td { padding: 2px 6px; }
+            .notam-num { font-size: 14px; }
+            .when-date-time { font-size: 13px; }
+            .plain-text { font-size: 15px !important; white-space: normal !important; }
+            .col-id { width: 14%; }
+            .col-start { width: 17%; }
+            .col-end { width: 17%; }
+            .col-text { width: 52%; }
+        }
+    </style>
+</head>
+<body>
+<div class="notam-shell" id="shell">
+    <div class="notam-header">
+        <div class="header-left">
+            <span class="notam-badge">NOTAM</span>
+            <span class="location-chip" id="val-location">KNEL</span>
+        </div>
+        <div class="header-center">
+            <div class="counter" id="val-counter">PAGE 0 / 0</div>
+            <div class="dot-row" id="dot-row"></div>
+        </div>
+        <div class="header-right">
+            <span class="fetched-label" id="val-fetched">Waiting for data…</span>
+        </div>
     </div>
-   </div>
+    <div class="progress-track">
+        <div class="progress-fill" id="progress-fill"></div>
+    </div>
+    <div class="table-wrap" id="table-wrap">
+        <div class="loading-state">
+            <div class="loading-title">Loading active NOTAMs…</div>
+        </div>
+    </div>
+</div>
 
-   <div class="notam-footer">
-    <button class="notam-nav-btn" id="prev-btn">&larr; Prev</button>
-    <span id="notam-id-display">--</span>
-    <button class="notam-nav-btn" id="next-btn">Next &rarr;</button>
-   </div>
-  </div>
+<script>
+    var PAGE_SIZE = 3;
+    var ROTATE_MS = 20000;
+    var notams = [];
+    var currentPage = 0;
+    var rotateTimer = null;
+    var fadeTimer = null;
+    var lastPayloadOk = false;
+    var fetchedAtIso = null;
+    var locationCode = 'KNEL';
 
-  <script>
-    var notamList = [];
-    var currentIndex = 0;
-    var cycleTimer = null;
-    const CYCLE_MS = 15000; // Time per NOTAM if not interacting
+    var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    window.addEventListener('message', function (event) {
+        if (!event.data) return;
+        if (event.data.type === 'NOTAM_DATA') {
+            handlePayload(event.data.payload);
+        }
+    });
+
+    function notifyParent(type) {
+        try {
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: type }, '*');
+            }
+        } catch (e) {}
+    }
+
+    function hasDisplayableData() {
+        return lastPayloadOk || notams.length > 0;
+    }
+
+    function pad2(n) {
+        return n < 10 ? '0' + n : String(n);
+    }
+
+    function formatEasternTime(iso) {
+        if (!iso) return { date: 'PERM', time: '', raw: 'PERM' };
+        var d = new Date(iso);
+        if (isNaN(d.getTime())) return { date: '--', time: '', raw: '--' };
+
+        try {
+            var dateStr = d.toLocaleDateString('en-US', {
+                timeZone: 'America/New_York',
+                day: '2-digit',
+                month: 'short'
+            });
+
+            var timeStr = d.toLocaleTimeString('en-US', {
+                timeZone: 'America/New_York',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+            
+            return { date: dateStr, time: timeStr, raw: dateStr + ' ' + timeStr };
+        } catch (e) {
+            return { date: 'Error', time: '', raw: '' };
+        }
+    }
+
+    function formatFetched(iso) {
+        if (!iso) return '';
+        var d = new Date(iso);
+        if (isNaN(d.getTime())) return '';
+        try {
+            return 'Updated ' + d.toLocaleTimeString('en-US', {
+                timeZone: 'America/New_York',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            }) + ' ET';
+        } catch (e) {
+            return 'Updated ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+        }
+    }
+
+    function formatSchedule(raw) {
+        if (!raw) return '';
+        var s = String(raw);
+        var tilde = s.indexOf('~');
+        if (tilde !== -1) s = s.substring(tilde + 1);
+        s = s.replace(/^Daily:/i, 'Daily ').replace(/DLY/i, 'Daily');
+        s = s.replace(/(\d{4})-(\d{4})/, '$1–$2Z');
+        return s.trim();
+    }
+
+    function isCancellation(notam, translations) {
+        if (!notam) return true;
+        var type = String(notam.type || '').toUpperCase();
+        if (type === 'C') return true;
+        var text = String(notam.text || '').toUpperCase();
+        if (text.indexOf('NOTAMC') !== -1) return true;
+        if (translations && translations.length) {
+            for (var i = 0; i < translations.length; i++) {
+                var blob = String((translations[i].formattedText || '') + ' ' + (translations[i].simpleText || '')).toUpperCase();
+                if (/\bNOTAMC\b/.test(blob) && type === 'C') return true;
+            }
+        }
+        return false;
+    }
+
+    function extractNotams(payload) {
+        var features = [];
+        try {
+            if (payload && payload.data && payload.data.data && Array.isArray(payload.data.data.geojson)) {
+                features = payload.data.data.geojson;
+            } else if (payload && payload.data && Array.isArray(payload.data.geojson)) {
+                features = payload.data.geojson;
+            } else if (payload && Array.isArray(payload.geojson)) {
+                features = payload.geojson;
+            } else if (Array.isArray(payload)) {
+                features = payload;
+            }
+        } catch (e) {
+            features = [];
+        }
+        if (!Array.isArray(features)) features = [];
+
+        var now = Date.now();
+        var list = [];
+
+        for (var i = 0; i < features.length; i++) {
+            var f = features[i];
+            var core = f && f.properties && f.properties.coreNOTAMData;
+            if (!core || !core.notam) continue;
+            var n = core.notam;
+            var translations = core.notamTranslation || [];
+            if (isCancellation(n, translations)) continue;
+
+            if (n.effectiveEnd) {
+                var endMs = new Date(n.effectiveEnd).getTime();
+                if (!isNaN(endMs) && endMs <= now) continue;
+            }
+
+            var number = n.number || '';
+            if (!number && n.series && n.year) {
+                number = n.series + '????/' + String(n.year).slice(-2);
+            }
+
+            list.push({
+                id: n.id || (number + '-' + (n.issued || i)),
+                number: number || ('NOTAM ' + (i + 1)),
+                text: n.text || '',
+                start: n.effectiveStart || n.issued || '',
+                end: n.effectiveEnd || '',
+                issued: n.issued || '',
+                schedule: formatSchedule(n.schedule),
+                location: n.icaoLocation || n.location || locationCode
+            });
+        }
+
+        list.sort(function (a, b) {
+            var aStart = new Date(a.start).getTime() || 0;
+            var bStart = new Date(b.start).getTime() || 0;
+            var aActive = aStart <= now ? 0 : 1;
+            var bActive = bStart <= now ? 0 : 1;
+            if (aActive !== bActive) return aActive - bActive;
+            var aIssued = new Date(a.issued || a.start).getTime() || 0;
+            var bIssued = new Date(b.issued || b.start).getTime() || 0;
+            return bIssued - aIssued;
+        });
+
+        return list;
+    }
+
+    function stopRotation() {
+        if (rotateTimer) {
+            clearInterval(rotateTimer);
+            rotateTimer = null;
+        }
+        var bar = document.getElementById('progress-fill');
+        if (bar) bar.classList.remove('running');
+    }
+
+    function restartProgress(totalPages) {
+        var bar = document.getElementById('progress-fill');
+        if (!bar) return;
+        bar.classList.remove('running');
+        void bar.offsetWidth;
+        if (totalPages > 1) {
+            bar.classList.add('running');
+        }
+    }
+
+    function startRotation(totalPages) {
+        stopRotation();
+        if (totalPages <= 1) {
+            var bar = document.getElementById('progress-fill');
+            if (bar) bar.classList.remove('running');
+            return;
+        }
+        restartProgress(totalPages);
+        rotateTimer = setInterval(function () {
+            var total = Math.ceil(notams.length / PAGE_SIZE);
+            if (total <= 1) return;
+            showPage((currentPage + 1) % total, true);
+        }, ROTATE_MS);
+    }
+
+    function buildDots(count, active) {
+        var row = document.getElementById('dot-row');
+        row.innerHTML = '';
+        if (count <= 1 || count > 14) return;
+        for (var i = 0; i < count; i++) {
+            var d = document.createElement('span');
+            d.className = 'dot' + (i === active ? ' current' : '');
+            row.appendChild(d);
+        }
+    }
+
+    function showEmpty(kind, title, sub) {
+        stopRotation();
+        document.getElementById('val-counter').textContent = 'PAGE 0 / 0';
+        document.getElementById('dot-row').innerHTML = '';
+        var wrap = document.getElementById('table-wrap');
+        wrap.innerHTML = '';
+        var box = document.createElement('div');
+        box.className = kind;
+        var t = document.createElement('div');
+        t.className = kind === 'error-state' ? 'error-title' : (kind === 'loading-state' ? 'loading-title' : 'empty-title');
+        t.textContent = title;
+        box.appendChild(t);
+        if (sub) {
+            var s = document.createElement('div');
+            s.className = 'empty-sub';
+            s.textContent = sub;
+            box.appendChild(s);
+        }
+        wrap.appendChild(box);
+    }
 
     function setupMarquee(track) {
         if (!track) return;
-        var wrapper = track.parentElement;
         var firstSpan = track.querySelector('.plain-text');
         if (!firstSpan) return;
 
@@ -163,24 +624,20 @@
         track.classList.remove('running');
         track.style.animationDuration = '';
 
-        // Temporarily reset to single-line natural width to check true text length
-        firstSpan.style.display = 'inline-block';
-        firstSpan.style.webkitLineClamp = 'unset';
-        firstSpan.style.whiteSpace = 'nowrap';
-        
-        var fullWidth = firstSpan.offsetWidth;
-
-        if (fullWidth > wrapper.clientWidth) {
-            // Text is too long to fit, keep it single-line and run marquee
+        if (firstSpan.scrollHeight > firstSpan.clientHeight + 2) {
             firstSpan.style.paddingRight = '60px';
+            firstSpan.style.display = 'inline-block';
+            firstSpan.style.webkitLineClamp = 'unset';
+            firstSpan.style.whiteSpace = 'nowrap';
+            
             var clone = firstSpan.cloneNode(true);
             track.appendChild(clone);
 
+            var fullWidth = firstSpan.offsetWidth;
             var duration = Math.max(10, Math.round(fullWidth / 45));
             track.style.animationDuration = duration + 's';
             track.classList.add('running');
         } else {
-            // Text fits on two lines or less, enforce 2-line wrapping
             firstSpan.style.paddingRight = '0';
             firstSpan.style.display = '-webkit-box';
             firstSpan.style.webkitLineClamp = '2';
@@ -188,86 +645,227 @@
         }
     }
 
-    function renderCurrentNotam() {
-        const textEl = document.getElementById('notam-text');
-        const counterEl = document.getElementById('notam-counter');
-        const idDisplay = document.getElementById('notam-id-display');
-        const track = document.getElementById('marquee-track');
+    function populatePageTable(pageItems) {
+        var wrap = document.getElementById('table-wrap');
+        wrap.innerHTML = '';
 
-        if (!notamList || notamList.length === 0) {
-            textEl.innerText = "No active NOTAMs.";
-            counterEl.innerText = "0 / 0";
-            idDisplay.innerText = "--";
-            setupMarquee(track);
+        var table = document.createElement('table');
+        table.className = 'notam-table';
+        table.id = 'notam-table';
+
+        var thead = document.createElement('thead');
+        var hr = document.createElement('tr');
+        var headers = [
+            { cls: 'col-id',    label: 'NOTAM #' },
+            { cls: 'col-start', label: 'Effective Start' },
+            { cls: 'col-end',   label: 'Effective End' },
+            { cls: 'col-text',  label: 'Details / Text' }
+        ];
+        for (var h = 0; h < headers.length; h++) {
+            var th = document.createElement('th');
+            th.className = headers[h].cls;
+            th.textContent = headers[h].label;
+            hr.appendChild(th);
+        }
+        thead.appendChild(hr);
+        table.appendChild(thead);
+
+        var tbody = document.createElement('tbody');
+
+        for (var i = 0; i < pageItems.length; i++) {
+            var item = pageItems[i];
+            var row = document.createElement('tr');
+            row.className = 'item-row';
+
+            // --- Column 1: ID & Status ---
+            var tdId = document.createElement('td');
+            tdId.className = 'col-id';
+            var idContainer = document.createElement('div');
+            idContainer.className = 'id-container';
+
+            var numSpan = document.createElement('span');
+            numSpan.className = 'notam-num';
+            numSpan.textContent = item.number || '——';
+            idContainer.appendChild(numSpan);
+
+            var startMs = item.start ? new Date(item.start).getTime() : 0;
+            var isFuture = startMs && startMs > Date.now();
+            var chip = document.createElement('span');
+            if (isFuture) {
+                chip.className = 'status-chip status-scheduled';
+                chip.textContent = 'SCHEDULED';
+            } else {
+                chip.className = 'status-chip status-active';
+                chip.textContent = 'ACTIVE';
+            }
+            idContainer.appendChild(chip);
+            tdId.appendChild(idContainer);
+            row.appendChild(tdId);
+
+            // --- Column 2: Effective Start ---
+            var startFmt = formatEasternTime(item.start);
+            var tdStart = document.createElement('td');
+            tdStart.className = 'col-start';
+            var startBox = document.createElement('div');
+            startBox.className = 'when-cell';
+            var startDt = document.createElement('span');
+            startDt.className = 'when-date-time';
+            startDt.innerHTML = startFmt.date + (startFmt.time ? '<span class="when-time-part">' + startFmt.time + '</span>' : '');
+            startBox.appendChild(startDt);
+            tdStart.appendChild(startBox);
+            row.appendChild(tdStart);
+
+            // --- Column 3: Effective End ---
+            var endFmt = formatEasternTime(item.end);
+            var tdEnd = document.createElement('td');
+            tdEnd.className = 'col-end';
+            var endBox = document.createElement('div');
+            endBox.className = 'when-cell';
+            var endDt = document.createElement('span');
+            endDt.className = 'when-date-time';
+            endDt.innerHTML = endFmt.date + (endFmt.time ? '<span class="when-time-part">' + endFmt.time + '</span>' : '');
+            endBox.appendChild(endDt);
+            if (item.schedule) {
+                var sch = document.createElement('span');
+                sch.className = 'when-sched';
+                sch.textContent = item.schedule;
+                endBox.appendChild(sch);
+            }
+            tdEnd.appendChild(endBox);
+            row.appendChild(tdEnd);
+
+            // --- Column 4: Text with Wrapping / Marquee ---
+            var tdText = document.createElement('td');
+            tdText.className = 'col-text';
+            var scrollWrapper = document.createElement('div');
+            scrollWrapper.className = 'text-scroll-wrapper';
+            var track = document.createElement('div');
+            track.className = 'marquee-track';
+            var p = document.createElement('span');
+            p.className = 'plain-text';
+            p.textContent = item.text || '—';
+            track.appendChild(p);
+            scrollWrapper.appendChild(track);
+            tdText.appendChild(scrollWrapper);
+            row.appendChild(tdText);
+
+            tbody.appendChild(row);
+        }
+
+        for (var k = pageItems.length; k < PAGE_SIZE; k++) {
+            var emptyRow = document.createElement('tr');
+            emptyRow.className = 'empty-filler-row';
+            var tdEmpty = document.createElement('td');
+            tdEmpty.colSpan = 4;
+            tdEmpty.innerHTML = '&nbsp;';
+            emptyRow.appendChild(tdEmpty);
+            tbody.appendChild(emptyRow);
+        }
+
+        table.appendChild(tbody);
+        wrap.appendChild(table);
+    }
+
+    function updateHeader(pageIndex, totalPages) {
+        document.getElementById('val-location').textContent = locationCode;
+        document.getElementById('val-counter').textContent = 'PAGE ' + (pageIndex + 1) + ' / ' + totalPages;
+
+        if (fetchedAtIso) {
+            document.getElementById('val-fetched').textContent = formatFetched(fetchedAtIso);
+        }
+
+        buildDots(totalPages, pageIndex);
+    }
+
+    function showPage(pageIndex, animate) {
+        if (!notams.length) return;
+        var totalPages = Math.ceil(notams.length / PAGE_SIZE);
+        currentPage = ((pageIndex % totalPages) + totalPages) % totalPages;
+
+        var startIdx = currentPage * PAGE_SIZE;
+        var pageItems = notams.slice(startIdx, startIdx + PAGE_SIZE);
+
+        var applyContent = function() {
+            populatePageTable(pageItems);
+            updateHeader(currentPage, totalPages);
+            restartProgress(totalPages);
+            setTimeout(function() {
+                var tracks = document.querySelectorAll('.marquee-track');
+                for (var i = 0; i < tracks.length; i++) {
+                    setupMarquee(tracks[i]);
+                }
+            }, 60);
+        };
+
+        if (animate) {
+            var existing = document.getElementById('notam-table');
+            if (existing) existing.classList.add('fade');
+            if (fadeTimer) clearTimeout(fadeTimer);
+            fadeTimer = setTimeout(applyContent, 260);
+        } else {
+            applyContent();
+        }
+    }
+
+    function handlePayload(payload) {
+        if (!payload || payload.ok === false) {
+            if (notams.length) return;
+            lastPayloadOk = false;
+            document.getElementById('val-fetched').textContent = 'Feed unavailable';
+            showEmpty('error-state', 'NOTAM FEED OFFLINE', 'Unable to reach FAA NMS. Retrying with dashboard refresh.');
             return;
         }
 
-        if (currentIndex >= notamList.length) currentIndex = 0;
-        if (currentIndex < 0) currentIndex = notamList.length - 1;
+        lastPayloadOk = true;
+        locationCode = payload.location || 'KNEL';
+        fetchedAtIso = payload.fetchedAt || new Date().toISOString();
+        document.getElementById('val-location').textContent = locationCode;
+        document.getElementById('val-fetched').textContent = formatFetched(fetchedAtIso);
 
-        const current = notamList[currentIndex];
-        // Support different payload schemas (e.g., text, message, or id/body)
-        const displayText = current.text || current.message || current.body || JSON.stringify(current);
-        const displayId = current.id || current.notamId || ('NOTAM ' + (currentIndex + 1));
+        notams = extractNotams(payload);
 
-        textEl.innerText = displayText;
-        counterEl.innerText = (currentIndex + 1) + ' / ' + notamList.length;
-        idDisplay.innerText = displayId;
+        if (!notams.length) {
+            showEmpty('empty-state', 'NO ACTIVE NOTAMs', 'No current or upcoming NOTAMs for ' + locationCode);
+            return;
+        }
 
-        setupMarquee(track);
+        var totalPages = Math.ceil(notams.length / PAGE_SIZE);
+        if (currentPage >= totalPages) currentPage = 0;
+
+        showPage(currentPage, false);
+        startRotation(totalPages);
     }
 
-    function startAutoCycle() {
-        if (cycleTimer) clearInterval(cycleTimer);
-        cycleTimer = setInterval(function () {
-            if (notamList.length > 1) {
-                currentIndex = (currentIndex + 1) % notamList.length;
-                renderCurrentNotam();
-            }
-        }, CYCLE_MS);
+    function checkCachedData() {
+        var cached = localStorage.getItem('cached_notam_payload');
+        if (!cached) return;
+        try {
+            var parsed = JSON.parse(cached);
+            if (parsed && parsed.data) handlePayload(parsed.data);
+        } catch (e) {}
     }
 
-    document.getElementById('next-btn').addEventListener('click', function () {
-        if (notamList.length > 1) {
-            currentIndex = (currentIndex + 1) % notamList.length;
-            renderCurrentNotam();
-            startAutoCycle();
-        }
-    });
+    checkCachedData();
+    notifyParent('NOTAM_READY');
+    setTimeout(function () { if (!hasDisplayableData()) notifyParent('NOTAM_READY'); }, 150);
+    setTimeout(function () { if (!hasDisplayableData()) notifyParent('NOTAM_READY'); }, 600);
 
-    document.getElementById('prev-btn').addEventListener('click', function () {
-        if (notamList.length > 1) {
-            currentIndex = (currentIndex - 1 + notamList.length) % notamList.length;
-            renderCurrentNotam();
-            startAutoCycle();
-        }
-    });
+    setTimeout(function () {
+        if (hasDisplayableData()) return;
+        notifyParent('NOTAM_REQUEST');
+        var label = document.getElementById('val-fetched');
+        if (label) label.textContent = 'Waiting for parent feed…';
+    }, 2500);
 
-    window.addEventListener('message', function (event) {
-        if (!event.data) return;
-        if (event.data.type === 'NOTAM_DATA') {
-            var payload = event.data.payload;
-            if (Array.isArray(payload)) {
-                notamList = payload;
-            } else if (payload && Array.isArray(payload.notams)) {
-                notamList = payload.notams;
-            } else if (payload) {
-                notamList = [payload];
-            } else {
-                notamList = [];
-            }
-            currentIndex = 0;
-            renderCurrentNotam();
-            startAutoCycle();
-        }
-    });
-
-    // Notify parent frame that this child iframe is ready to receive data
-    window.addEventListener('DOMContentLoaded', function () {
-        if (window.parent && window.parent !== window) {
-            window.parent.postMessage({ type: 'NOTAM_READY' }, '*');
-        }
-    });
-  </script>
- </body>
+    setTimeout(function () {
+        if (hasDisplayableData()) return;
+        notifyParent('NOTAM_REQUEST');
+        showEmpty(
+            'error-state',
+            'NOTAM FEED OFFLINE',
+            'No data received from dashboard. Retrying automatically.'
+        );
+    }, 8000);
+</script>
+</body>
 </html>
