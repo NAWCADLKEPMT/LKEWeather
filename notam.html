@@ -520,10 +520,14 @@
                 number = n.series + '????/' + String(n.year).slice(-2);
             }
 
+            // Replace newline characters with "\\"
+            var rawText = n.text || '';
+            var sanitizedText = rawText.replace(/\r?\n/g, '\\\\');
+
             list.push({
                 id: n.id || (number + '-' + (n.issued || i)),
                 number: number || ('NOTAM ' + (i + 1)),
-                text: n.text || '',
+                text: sanitizedText,
                 start: n.effectiveStart || n.issued || '',
                 end: n.effectiveEnd || '',
                 issued: n.issued || '',
@@ -624,6 +628,13 @@
         track.classList.remove('running');
         track.style.animationDuration = '';
 
+        // Reset to initial wrapping state to accurately measure if it overflows 2 lines
+        firstSpan.style.display = '-webkit-box';
+        firstSpan.style.webkitLineClamp = '2';
+        firstSpan.style.whiteSpace = 'normal';
+        firstSpan.style.paddingRight = '0';
+
+        // Evaluate for wrapping overflow
         if (firstSpan.scrollHeight > firstSpan.clientHeight + 2) {
             firstSpan.style.paddingRight = '60px';
             firstSpan.style.display = 'inline-block';
@@ -637,11 +648,6 @@
             var duration = Math.max(10, Math.round(fullWidth / 45));
             track.style.animationDuration = duration + 's';
             track.classList.add('running');
-        } else {
-            firstSpan.style.paddingRight = '0';
-            firstSpan.style.display = '-webkit-box';
-            firstSpan.style.webkitLineClamp = '2';
-            firstSpan.style.whiteSpace = 'normal';
         }
     }
 
