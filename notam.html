@@ -271,7 +271,7 @@
             text-overflow: ellipsis;
         }
 
-        /* Text Wrapping & Conditional Marquee */
+        /* Single-Line Text & Full-Width Conditional Marquee */
         .text-scroll-wrapper {
             width: 100%;
             overflow: hidden;
@@ -283,7 +283,8 @@
             will-change: transform;
         }
         .marquee-track.running {
-            display: inline-flex;
+            display: flex;
+            width: max-content;
             white-space: nowrap;
             animation: marquee-loop 16s linear infinite;
         }
@@ -296,12 +297,11 @@
             font-weight: 800;
             color: #0f172a;
             line-height: 1.2;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
+            display: block;
+            width: 100%;
+            white-space: nowrap !important;
             overflow: hidden;
             text-overflow: ellipsis;
-            white-space: normal !important;
         }
 
         /* Empty / Error / Loading States */
@@ -347,7 +347,7 @@
             .notam-table td { padding: 2px 6px; }
             .notam-num { font-size: 14px; }
             .when-date-time { font-size: 13px; }
-            .plain-text { font-size: 15px !important; white-space: normal !important; }
+            .plain-text { font-size: 15px !important; white-space: nowrap !important; }
             .col-id { width: 14%; }
             .col-start { width: 17%; }
             .col-end { width: 17%; }
@@ -520,7 +520,6 @@
                 number = n.series + '????/' + String(n.year).slice(-2);
             }
 
-            // Replace newline characters with "\\"
             var rawText = n.text || '';
             var sanitizedText = rawText.replace(/\r?\n/g, '\\\\');
 
@@ -618,8 +617,9 @@
 
     function setupMarquee(track) {
         if (!track) return;
+        var wrapper = track.parentElement;
         var firstSpan = track.querySelector('.plain-text');
-        if (!firstSpan) return;
+        if (!firstSpan || !wrapper) return;
 
         var spans = track.querySelectorAll('.plain-text');
         for (var i = 1; i < spans.length; i++) {
@@ -628,26 +628,32 @@
         track.classList.remove('running');
         track.style.animationDuration = '';
 
-        // Reset to initial wrapping state to accurately measure if it overflows 2 lines
-        firstSpan.style.display = '-webkit-box';
-        firstSpan.style.webkitLineClamp = '2';
-        firstSpan.style.whiteSpace = 'normal';
+        // Temporarily disable clipping to measure the true full-line width of the text string
+        firstSpan.style.whiteSpace = 'nowrap';
+        firstSpan.style.overflow = 'visible';
+        firstSpan.style.textOverflow = 'clip';
         firstSpan.style.paddingRight = '0';
 
-        // Evaluate for wrapping overflow
-        if (firstSpan.scrollHeight > firstSpan.clientHeight + 2) {
+        var naturalWidth = firstSpan.scrollWidth;
+        var containerWidth = wrapper.clientWidth;
+
+        if (naturalWidth > containerWidth) {
+            // Text overflows a single line -> trigger full-width single-line marquee
+            firstSpan.style.overflow = 'hidden';
+            firstSpan.style.textOverflow = 'ellipsis';
             firstSpan.style.paddingRight = '60px';
-            firstSpan.style.display = 'inline-block';
-            firstSpan.style.webkitLineClamp = 'unset';
-            firstSpan.style.whiteSpace = 'nowrap';
             
             var clone = firstSpan.cloneNode(true);
+            clone.style.paddingRight = '0';
             track.appendChild(clone);
 
-            var fullWidth = firstSpan.offsetWidth;
-            var duration = Math.max(10, Math.round(fullWidth / 45));
+            var duration = Math.max(10, Math.round(naturalWidth / 45));
             track.style.animationDuration = duration + 's';
             track.classList.add('running');
+        } else {
+            // Fits cleanly on one line
+            firstSpan.style.overflow = 'hidden';
+            firstSpan.style.textOverflow = 'ellipsis';
         }
     }
 
@@ -740,7 +746,7 @@
             tdEnd.appendChild(endBox);
             row.appendChild(tdEnd);
 
-            // --- Column 4: Text with Wrapping / Marquee ---
+            // --- Column 4: Single-Line Text with Conditional Marquee ---
             var tdText = document.createElement('td');
             tdText.className = 'col-text';
             var scrollWrapper = document.createElement('div');
