@@ -137,7 +137,6 @@
             transform-origin: left center;
         }
         .progress-fill.running {
-            /* Animation duration will be controlled via JavaScript */
             animation: notam-progress linear forwards;
         }
         @keyframes notam-progress {
@@ -209,9 +208,9 @@
         .col-start { width: 14%; }
         .col-end   { width: 14%; }
         
-        .col-text  { 
+        .col-text { 
             width: 61%; 
-            padding: 0 !important;
+            padding: 3px 12px !important;
             height: 100%;
         }
 
@@ -284,7 +283,7 @@
             display: flex;
             align-items: center;
             box-sizing: border-box;
-            padding: 0 10px;
+            padding: 0;
         }
 
         .marquee-track {
@@ -316,6 +315,8 @@
             word-break: break-word;
             flex-shrink: 0;
             width: 100%;
+            margin: 0;
+            padding: 0;
         }
 
         .marquee-mode .plain-text {
@@ -325,6 +326,7 @@
             width: auto !important;
             -webkit-line-clamp: unset !important;
             overflow: visible !important;
+            padding-right: 60px !important;
         }
 
         /* States */
@@ -368,7 +370,7 @@
             .fetched-label { font-size: 11px; }
             .notam-table th { font-size: 10px; padding: 2px 6px; }
             .notam-table td { padding: 2px 6px; }
-            .notam-table td.col-text { padding: 0 !important; }
+            .notam-table td.col-text { padding: 2px 6px !important; }
             .notam-num { font-size: 14px; }
             .when-date-time { font-size: 13px; }
             .plain-text { font-size: 13px !important; }
@@ -655,21 +657,16 @@
             track.classList.add('marquee-mode');
             
             var naturalWidth = firstSpan.scrollWidth;
-            firstSpan.style.paddingRight = '60px';
-            
             var clone = firstSpan.cloneNode(true);
             track.appendChild(clone);
 
-            // Calculate duration based on text length (in seconds)
             var durationSec = Math.max(10, Math.round(naturalWidth / 40));
             track.style.animationDuration = durationSec + 's';
             track.classList.add('running');
             
             return durationSec * 1000;
-        } else {
-            firstSpan.style.paddingRight = '0';
-            return 0;
         }
+        return 0;
     }
 
     function populatePageTable(pageItems) {
@@ -820,7 +817,6 @@
                 var tracks = document.querySelectorAll('.marquee-track');
                 var maxMarqueeMs = 0;
 
-                // Configure marquees and evaluate longest single-cycle time
                 for (var i = 0; i < tracks.length; i++) {
                     var ms = setupMarquee(tracks[i]);
                     if (ms > maxMarqueeMs) {
@@ -828,7 +824,6 @@
                     }
                 }
 
-                // Page time is extended if a marquee needs more than 20 seconds for 1 full cycle
                 var pageDisplayMs = Math.max(DEFAULT_ROTATE_MS, maxMarqueeMs);
                 startRotation(totalPages, pageDisplayMs);
             }, 60);
