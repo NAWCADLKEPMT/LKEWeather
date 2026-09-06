@@ -137,7 +137,8 @@
             transform-origin: left center;
         }
         .progress-fill.running {
-            animation: notam-progress 20s linear forwards;
+            /* Animation duration will be controlled via JavaScript */
+            animation: notam-progress linear forwards;
         }
         @keyframes notam-progress {
             from { transform: scaleX(0); }
@@ -295,7 +296,7 @@
 
         .marquee-track.running {
             width: max-content;
-            animation: marquee-loop 16s linear infinite;
+            animation: marquee-loop linear infinite;
         }
 
         @keyframes marquee-loop {
@@ -303,7 +304,6 @@
             100% { transform: translateX(-50%); }
         }
 
-        /* Default 2-line layout */
         .plain-text {
             font-size: 17px !important;
             font-weight: 800;
@@ -318,7 +318,6 @@
             width: 100%;
         }
 
-        /* Single line marquee fallback layout when overflowing 2 lines */
         .marquee-mode .plain-text {
             font-size: 20px !important;
             display: inline-block !important;
@@ -408,7 +407,7 @@
 
 <script>
     var PAGE_SIZE = 3;
-    var ROTATE_MS = 20000;
+    var DEFAULT_ROTATE_MS = 20000;
     var notams = [];
     var currentPage = 0;
     var rotateTimer = null;
@@ -434,10 +433,6 @@
 
     function hasDisplayableData() {
         return lastPayloadOk || notams.length > 0;
-    }
-
-    function pad2(n) {
-        return n < 10 ? '0' + n : String(n);
     }
 
     function formatEasternTime(iso) {
@@ -477,7 +472,7 @@
                 hour12: true
             }) + ' ET';
         } catch (e) {
-            return 'Updated ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+            return 'Updated ' + d.getHours() + ':' + d.getMinutes();
         }
     }
 
@@ -575,36 +570,38 @@
 
     function stopRotation() {
         if (rotateTimer) {
-            clearInterval(rotateTimer);
+            clearTimeout(rotateTimer);
             rotateTimer = null;
         }
         var bar = document.getElementById('progress-fill');
-        if (bar) bar.classList.remove('running');
+        if (bar) {
+            bar.classList.remove('running');
+            bar.style.animationDuration = '';
+        }
     }
 
-    function restartProgress(totalPages) {
+    function restartProgress(totalPages, durationMs) {
         var bar = document.getElementById('progress-fill');
         if (!bar) return;
         bar.classList.remove('running');
         void bar.offsetWidth;
         if (totalPages > 1) {
+            bar.style.animationDuration = (durationMs / 1000) + 's';
             bar.classList.add('running');
         }
     }
 
-    function startRotation(totalPages) {
+    function startRotation(totalPages, durationMs) {
         stopRotation();
-        if (totalPages <= 1) {
-            var bar = document.getElementById('progress-fill');
-            if (bar) bar.classList.remove('running');
-            return;
-        }
-        restartProgress(totalPages);
-        rotateTimer = setInterval(function () {
+        if (totalPages <= 1) return;
+
+        restartProgress(totalPages, durationMs);
+        
+        rotateTimer = setTimeout(function () {
             var total = Math.ceil(notams.length / PAGE_SIZE);
             if (total <= 1) return;
             showPage((currentPage + 1) % total, true);
-        }, ROTATE_MS);
+        }, durationMs);
     }
 
     function buildDots(count, active) {
@@ -640,12 +637,11 @@
     }
 
     function setupMarquee(track) {
-        if (!track) return;
+        if (!track) return 0;
         var wrapper = track.parentElement;
         var firstSpan = track.querySelector('.plain-text');
-        if (!firstSpan || !wrapper) return;
+        if (!firstSpan || !wrapper) return 0;
 
-        // Reset track state
         track.classList.remove('marquee-mode', 'running');
         track.style.animationDuration = '';
         var spans = track.querySelectorAll('.plain-text');
@@ -653,11 +649,9 @@
             spans[i].remove();
         }
 
-        // Test if text exceeds 2 lines in multi-line mode
         var isOverflowingTwoLines = firstSpan.scrollHeight > (firstSpan.clientHeight + 2);
 
         if (isOverflowingTwoLines) {
-            // Text exceeds 2 lines -> Switch to single line marquee loop
             track.classList.add('marquee-mode');
             
             var naturalWidth = firstSpan.scrollWidth;
@@ -666,12 +660,15 @@
             var clone = firstSpan.cloneNode(true);
             track.appendChild(clone);
 
-            var duration = Math.max(10, Math.round(naturalWidth / 40));
-            track.style.animationDuration = duration + 's';
+            // Calculate duration based on text length (in seconds)
+            var durationSec = Math.max(10, Math.round(naturalWidth / 40));
+            track.style.animationDuration = durationSec + 's';
             track.classList.add('running');
+            
+            return durationSec * 1000;
         } else {
-            // Text fits cleanly within 2 lines -> Static display
             firstSpan.style.paddingRight = '0';
+            return 0;
         }
     }
 
@@ -764,7 +761,7 @@
             tdEnd.appendChild(endBox);
             row.appendChild(tdEnd);
 
-            // Column 4: Text Details (2-Line Cap or Single-Line Marquee)
+            // Column 4: Text Details
             var tdText = document.createElement('td');
             tdText.className = 'col-text';
             var scrollWrapper = document.createElement('div');
@@ -818,12 +815,22 @@
         var applyContent = function() {
             populatePageTable(pageItems);
             updateHeader(currentPage, totalPages);
-            restartProgress(totalPages);
+            
             setTimeout(function() {
                 var tracks = document.querySelectorAll('.marquee-track');
+                var maxMarqueeMs = 0;
+
+                // Configure marquees and evaluate longest single-cycle time
                 for (var i = 0; i < tracks.length; i++) {
-                    setupMarquee(tracks[i]);
+                    var ms = setupMarquee(tracks[i]);
+                    if (ms > maxMarqueeMs) {
+                        maxMarqueeMs = ms;
+                    }
                 }
+
+                // Page time is extended if a marquee needs more than 20 seconds for 1 full cycle
+                var pageDisplayMs = Math.max(DEFAULT_ROTATE_MS, maxMarqueeMs);
+                startRotation(totalPages, pageDisplayMs);
             }, 60);
         };
 
@@ -863,7 +870,6 @@
         if (currentPage >= totalPages) currentPage = 0;
 
         showPage(currentPage, false);
-        startRotation(totalPages);
     }
 
     function checkCachedData() {
