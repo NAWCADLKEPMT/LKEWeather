@@ -203,11 +203,17 @@
             box-sizing: border-box;
         }
 
-        /* Compact side columns; Expanded text column */
+        /* Column widths */
         .col-id    { width: 11%; }
         .col-start { width: 14%; }
         .col-end   { width: 14%; }
-        .col-text  { width: 61%; }
+        
+        /* Remove cell padding for text cell so visible region spans full cell width */
+        .col-text  { 
+            width: 61%; 
+            padding: 0 !important;
+            height: 100%;
+        }
 
         .id-container {
             display: flex;
@@ -223,7 +229,7 @@
             letter-spacing: 0.2px;
         }
 
-        /* High-Contrast Badges */
+        /* Status Badges */
         .status-chip {
             font-size: 10px;
             font-weight: 900;
@@ -271,40 +277,53 @@
             text-overflow: ellipsis;
         }
 
-        /* Single-Line Text & Full-Width Conditional Marquee */
+        /* Full-Cell Visible Region Marquee Container */
         .text-scroll-wrapper {
             width: 100%;
+            height: 100%;
             overflow: hidden;
             position: relative;
+            display: flex;
+            align-items: center;
+            box-sizing: border-box;
+            padding: 0 10px;
         }
+
         .marquee-track {
-            display: block;
+            display: flex;
+            align-items: center;
             width: 100%;
             will-change: transform;
-        }
-        .marquee-track.running {
-            display: flex;
-            width: max-content;
             white-space: nowrap;
+        }
+
+        .marquee-track.running {
+            width: max-content;
             animation: marquee-loop 16s linear infinite;
         }
+
         @keyframes marquee-loop {
             0%   { transform: translateX(0); }
             100% { transform: translateX(-50%); }
         }
+
         .plain-text {
             font-size: 21px !important;
             font-weight: 800;
             color: #0f172a;
             line-height: 1.2;
-            display: block;
-            width: 100%;
             white-space: nowrap !important;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            display: inline-block;
+            flex-shrink: 0;
         }
 
-        /* Empty / Error / Loading States */
+        .marquee-track:not(.running) .plain-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+        }
+
+        /* States */
         .empty-state, .error-state, .loading-state {
             flex: 1;
             display: flex;
@@ -345,9 +364,10 @@
             .fetched-label { font-size: 11px; }
             .notam-table th { font-size: 10px; padding: 2px 6px; }
             .notam-table td { padding: 2px 6px; }
+            .notam-table td.col-text { padding: 0 !important; }
             .notam-num { font-size: 14px; }
             .when-date-time { font-size: 13px; }
-            .plain-text { font-size: 15px !important; white-space: nowrap !important; }
+            .plain-text { font-size: 15px !important; }
             .col-id { width: 14%; }
             .col-start { width: 17%; }
             .col-end { width: 17%; }
@@ -521,7 +541,8 @@
             }
 
             var rawText = n.text || '';
-            var sanitizedText = rawText.replace(/\r?\n/g, '\\\\');
+            // Sanitize raw text so newlines turn into clean spaces instead of breaking onto multiple lines
+            var sanitizedText = rawText.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
 
             list.push({
                 id: n.id || (number + '-' + (n.issued || i)),
@@ -621,6 +642,7 @@
         var firstSpan = track.querySelector('.plain-text');
         if (!firstSpan || !wrapper) return;
 
+        // Clean up clones
         var spans = track.querySelectorAll('.plain-text');
         for (var i = 1; i < spans.length; i++) {
             spans[i].remove();
@@ -628,32 +650,25 @@
         track.classList.remove('running');
         track.style.animationDuration = '';
 
-        // Temporarily disable clipping to measure the true full-line width of the text string
-        firstSpan.style.whiteSpace = 'nowrap';
-        firstSpan.style.overflow = 'visible';
-        firstSpan.style.textOverflow = 'clip';
-        firstSpan.style.paddingRight = '0';
-
+        // Measure natural single-line text width vs wrapper visible area
+        firstSpan.style.width = 'auto';
         var naturalWidth = firstSpan.scrollWidth;
-        var containerWidth = wrapper.clientWidth;
+        var containerWidth = wrapper.clientWidth - 20; // Account for 10px side padding
+
+        firstSpan.style.width = '';
 
         if (naturalWidth > containerWidth) {
-            // Text overflows a single line -> trigger full-width single-line marquee
-            firstSpan.style.overflow = 'hidden';
-            firstSpan.style.textOverflow = 'ellipsis';
+            // Text overflows -> construct seamless marquee loop
             firstSpan.style.paddingRight = '60px';
             
             var clone = firstSpan.cloneNode(true);
-            clone.style.paddingRight = '0';
             track.appendChild(clone);
 
-            var duration = Math.max(10, Math.round(naturalWidth / 45));
+            var duration = Math.max(10, Math.round(naturalWidth / 40));
             track.style.animationDuration = duration + 's';
             track.classList.add('running');
         } else {
-            // Fits cleanly on one line
-            firstSpan.style.overflow = 'hidden';
-            firstSpan.style.textOverflow = 'ellipsis';
+            firstSpan.style.paddingRight = '0';
         }
     }
 
@@ -746,7 +761,7 @@
             tdEnd.appendChild(endBox);
             row.appendChild(tdEnd);
 
-            // --- Column 4: Single-Line Text with Conditional Marquee ---
+            // --- Column 4: Single-Line Text with Full-Cell Visible Marquee ---
             var tdText = document.createElement('td');
             tdText.className = 'col-text';
             var scrollWrapper = document.createElement('div');
