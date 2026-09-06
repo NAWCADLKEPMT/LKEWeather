@@ -2,7 +2,7 @@
 <html lang="en">
  <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <link rel="apple-touch-icon" sizes="180x180" href="Icons/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="Icons/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="Icons/favicon-16x16.png">
@@ -15,7 +15,6 @@
         margin: 0;
         padding: 0;
         width: 100%;
-        /* Use standard 100vh fallback alongside dvh */
         height: 100vh;
         height: 100dvh;
         background-color: #0b0f19;
@@ -31,7 +30,6 @@
         width: 100%;
         height: 100vh;
         height: 100dvh;
-        /* Account for mobile safe area (notches, home bars) */
         padding: 10px;
         padding-bottom: max(10px, env(safe-area-inset-bottom));
         box-sizing: border-box;
@@ -56,7 +54,7 @@
         background-color: #e9ecef;
     }
 
-    /* Horizontal TAF strip directly under METAR */
+    /* Horizontal TAF strip directly under METAR — compact light theme */
     .taf-pane {
         height: 118px;
         min-height: 118px;
@@ -78,6 +76,8 @@
         min-height: 0;
     }
 
+    /* Right column: traffic/lightning on top, NOTAM strip below.
+       Radar in the left column is unaffected and keeps full grid height. */
     .right-stack {
         display: flex;
         flex-direction: column;
@@ -106,33 +106,33 @@
         display: block;
     }
 
-    /* Mobile / Portrait Fixes */
+    /* Mobile / Portrait: Adjusted height budget & fixed NOTAM pane size */
     @media screen and (max-width: 1100px), screen and (max-aspect-ratio: 1/1), (orientation: portrait) {
         html, body {
-            overflow: hidden;
-            height: 100vh;
-            height: 100dvh;
+            overflow: hidden !important;
+            height: 100vh !important;
+            height: 100svh !important; /* Forces smallest dynamic viewport calculation when mobile address bar is visible */
         }
 
         .dashboard-container {
-            height: 100vh;
-            height: 100dvh;
+            height: 100vh !important;
+            height: 100svh !important;
+            overflow: hidden !important;
             padding: 6px;
-            /* Extra padding to prevent home bar overlap in standalone mode */
             padding-bottom: max(6px, env(safe-area-inset-bottom));
             gap: 6px;
         }
 
-        /* Reduced heights slightly on mobile so layout fits in smaller web viewports */
         .metar-pane {
             height: 140px !important;
-            flex-shrink: 0;
+            min-height: 140px !important;
+            flex-shrink: 0 !important;
         }
 
         .taf-pane {
-            height: 100px !important;
-            min-height: 100px !important;
-            flex-shrink: 0;
+            height: 110px !important;
+            min-height: 110px !important;
+            flex-shrink: 0 !important;
         }
 
         .main-content-grid {
@@ -155,20 +155,22 @@
             gap: 6px;
         }
 
+        /* Fluid pane that absorbs viewport scale differences */
         .lightning-pane {
             flex: 1 1 0%;
             min-height: 0;
         }
 
+        /* Strict fixed height for NOTAM panel on mobile */
         .notam-pane {
-            /* Converted from fixed height to flexible height on narrow screens */
-            height: auto !important;
-            min-height: 120px !important;
-            flex: 1 1 0%;
-            flex-shrink: 1 !important;
+            height: 150px !important;
+            min-height: 150px !important;
+            max-height: 150px !important;
+            flex: 0 0 150px !important;
+            flex-shrink: 0 !important;
         }
     }
-</style>
+  </style>
  </head>
  <body>
 
@@ -308,7 +310,7 @@
         if (needed < 100) return;
 
         var maxH = Math.floor(window.innerHeight * 0.28);
-        var h = Math.min(Math.max(needed, 118), maxH);
+        var h = Math.min(Math.max(needed, 110), maxH);
 
         pane.style.height = h + 'px';
         pane.style.minHeight = h + 'px';
@@ -414,6 +416,6 @@
         }
       });
     })();
-  </script>
+ </script>
  </body>
 </html>
