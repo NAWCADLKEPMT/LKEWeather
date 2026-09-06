@@ -15,7 +15,8 @@
         margin: 0;
         padding: 0;
         width: 100%;
-        height: 100%;
+        /* Use standard 100vh fallback alongside dvh */
+        height: 100vh;
         height: 100dvh;
         background-color: #0b0f19;
         color: #f8fafc;
@@ -23,18 +24,20 @@
         overflow: hidden;
         box-sizing: border-box;
     }
- 
+
     .dashboard-container {
         display: flex;
         flex-direction: column;
         width: 100%;
-        height: 100%;
+        height: 100vh;
         height: 100dvh;
+        /* Account for mobile safe area (notches, home bars) */
         padding: 10px;
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
         box-sizing: border-box;
         gap: 8px;
     }
- 
+
     .pane {
         width: 100%;
         height: 100%;
@@ -45,7 +48,7 @@
         background-color: #1e293b;
         min-height: 0;
     }
- 
+
     /* Top METAR Panel */
     .metar-pane {
         height: 165px;
@@ -53,17 +56,17 @@
         background-color: #e9ecef;
     }
 
-    /* Horizontal TAF strip directly under METAR — compact light theme */
+    /* Horizontal TAF strip directly under METAR */
     .taf-pane {
         height: 118px;
         min-height: 118px;
         flex-shrink: 0;
         background-color: #e9ecef;
     }
- 
+
     /* Lower Content Grid: Radar | Lightning/Traffic + NOTAMs */
     .main-content-grid {
-        flex: 1 1 0;
+        flex: 1 1 0%;
         display: grid;
         grid-template-columns: 1fr 1fr;
         grid-template-rows: 1fr;
@@ -75,8 +78,6 @@
         min-height: 0;
     }
 
-    /* Right column: traffic/lightning on top, NOTAM strip below.
-        Radar in the left column is unaffected and keeps full grid height. */
     .right-stack {
         display: flex;
         flex-direction: column;
@@ -86,7 +87,7 @@
     }
 
     .lightning-pane {
-        flex: 1 1 0;
+        flex: 1 1 0%;
         height: auto;
         min-height: 0;
     }
@@ -97,65 +98,74 @@
         flex-shrink: 0;
         background-color: #0f172a;
     }
- 
+
     iframe {
         width: 100%;
         height: 100%;
         border: none;
         display: block;
     }
- 
-    /* Mobile / Portrait: adjusted NOTAM pane height to prevent clipping */
+
+    /* Mobile / Portrait Fixes */
     @media screen and (max-width: 1100px), screen and (max-aspect-ratio: 1/1), (orientation: portrait) {
         html, body {
-            overflow: hidden !important;
-            height: 100% !important;
-            height: 100dvh !important;
+            overflow: hidden;
+            height: 100vh;
+            height: 100dvh;
         }
 
         .dashboard-container {
-            height: 100% !important;
-            height: 100dvh !important;
-            overflow: hidden !important;
+            height: 100vh;
+            height: 100dvh;
             padding: 6px;
+            /* Extra padding to prevent home bar overlap in standalone mode */
+            padding-bottom: max(6px, env(safe-area-inset-bottom));
             gap: 6px;
         }
 
+        /* Reduced heights slightly on mobile so layout fits in smaller web viewports */
         .metar-pane {
-            height: 185px !important;
+            height: 140px !important;
             flex-shrink: 0;
         }
 
         .taf-pane {
-            height: 130px;
-            min-height: 130px;
+            height: 100px !important;
+            min-height: 100px !important;
             flex-shrink: 0;
         }
- 
+
         .main-content-grid {
             display: flex;
             flex-direction: column;
-            flex: 1 1 0;
+            flex: 1 1 0%;
             min-height: 0;
             gap: 6px;
         }
 
         .main-content-grid > .radar-pane {
-            flex: 1 1 0;
+            flex: 1 1 0%;
             height: auto;
             min-height: 0;
         }
 
         .main-content-grid > .right-stack {
-            flex: 1.2 1 0;
+            flex: 1 1 0%;
             min-height: 0;
             gap: 6px;
         }
 
+        .lightning-pane {
+            flex: 1 1 0%;
+            min-height: 0;
+        }
+
         .notam-pane {
-            height: 195px !important;
-            min-height: 195px !important;
-            flex-shrink: 0;
+            /* Converted from fixed height to flexible height on narrow screens */
+            height: auto !important;
+            min-height: 120px !important;
+            flex: 1 1 0%;
+            flex-shrink: 1 !important;
         }
     }
 </style>
