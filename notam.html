@@ -803,7 +803,7 @@
         
         // Displaying Page Numbers and Total Messages Count
         var totalMessages = notams.length;
-        document.getElementById('val-counter').textContent = 'PAGE ' + (pageIndex + 1) + ' / ' + totalPages + ' (' + totalMessages + ' TOTAL)';
+        document.getElementById('val-counter').textContent = 'PAGE ' + (pageIndex + 1) + ' / ' + totalPages + ' (' + totalMessages + ' MESSAGES)';
 
         if (fetchedAtIso) {
             document.getElementById('val-fetched').textContent = formatFetched(fetchedAtIso);
