@@ -626,7 +626,7 @@
 
     function showEmpty(kind, title, sub) {
         stopRotation();
-        document.getElementById('val-counter').textContent = 'PAGE 0 / 0';
+        document.getElementById('val-counter').textContent = '0 NOTAMs';
         document.getElementById('dot-row').innerHTML = '';
         var wrap = document.getElementById('table-wrap');
         wrap.innerHTML = '';
@@ -800,7 +800,10 @@
 
     function updateHeader(pageIndex, totalPages) {
         document.getElementById('val-location').textContent = locationCode;
-        document.getElementById('val-counter').textContent = 'PAGE ' + (pageIndex + 1) + ' / ' + totalPages;
+        
+        // Displaying Page Numbers and Total Messages Count
+        var totalMessages = notams.length;
+        document.getElementById('val-counter').textContent = 'PAGE ' + (pageIndex + 1) + ' / ' + totalPages + ' (' + totalMessages + ' TOTAL)';
 
         if (fetchedAtIso) {
             document.getElementById('val-fetched').textContent = formatFetched(fetchedAtIso);
