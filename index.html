@@ -76,8 +76,7 @@
         min-height: 0;
     }
 
-    /* Right column: traffic/lightning on top, NOTAM strip below.
-       Radar in the left column is unaffected and keeps full grid height. */
+    /* Right column: traffic/lightning on top, NOTAM strip below. */
     .right-stack {
         display: flex;
         flex-direction: column;
@@ -106,12 +105,12 @@
         display: block;
     }
 
-    /* Mobile / Portrait: Adjusted height budget & fixed NOTAM pane size */
+    /* Mobile / Portrait Viewport Corrections */
     @media screen and (max-width: 1100px), screen and (max-aspect-ratio: 1/1), (orientation: portrait) {
         html, body {
             overflow: hidden !important;
             height: 100vh !important;
-            height: 100svh !important; /* Forces smallest dynamic viewport calculation when mobile address bar is visible */
+            height: 100svh !important;
         }
 
         .dashboard-container {
@@ -124,14 +123,14 @@
         }
 
         .metar-pane {
-            height: 140px !important;
-            min-height: 140px !important;
+            height: 135px !important;
+            min-height: 135px !important;
             flex-shrink: 0 !important;
         }
 
         .taf-pane {
-            height: 110px !important;
-            min-height: 110px !important;
+            height: 100px !important;
+            min-height: 100px !important;
             flex-shrink: 0 !important;
         }
 
@@ -155,18 +154,18 @@
             gap: 6px;
         }
 
-        /* Fluid pane that absorbs viewport scale differences */
+        /* Lightning panel dynamically shrinks to make room */
         .lightning-pane {
-            flex: 1 1 0%;
-            min-height: 0;
+            flex: 1 1 0% !important;
+            min-height: 80px !important;
         }
 
-        /* Strict fixed height for NOTAM panel on mobile */
+        /* NOTAM panel set to 210px to accommodate 3 rows without vertical clipping */
         .notam-pane {
-            height: 150px !important;
-            min-height: 150px !important;
-            max-height: 150px !important;
-            flex: 0 0 150px !important;
+            height: 210px !important;
+            min-height: 210px !important;
+            max-height: 210px !important;
+            flex: 0 0 210px !important;
             flex-shrink: 0 !important;
         }
     }
@@ -251,7 +250,6 @@
             broadcastData(payload);
         } catch (err) {
             console.error("Central fetch failed:", err);
-            // Fallback to cache if available
             if (!lastPayload) {
                 const cached = localStorage.getItem('cached_dashboard_payload');
                 if (cached) {
@@ -280,7 +278,15 @@
             tafFrame.contentWindow.postMessage({ type: 'WEATHER_DATA', payload: payload.metarkv }, '*');
         }
         if (notamFrame && notamFrame.contentWindow) {
-            notamFrame.contentWindow.postMessage({ type: 'NOTAM_DATA', payload: payload.notamkv }, '*');
+            // Count total items array if present or calculate keys count
+            const rawNotams = payload.notamkv || {};
+            const totalCount = Array.isArray(rawNotams) ? rawNotams.length : Object.keys(rawNotams).length;
+            
+            notamFrame.contentWindow.postMessage({ 
+                type: 'NOTAM_DATA', 
+                payload: rawNotams,
+                totalCount: totalCount
+            }, '*');
         }
     }
 
@@ -292,7 +298,14 @@
             if (lastPayload && lastPayload.notamkv) {
                 const notamFrame = document.getElementById('notam-frame');
                 if (notamFrame && notamFrame.contentWindow) {
-                    notamFrame.contentWindow.postMessage({ type: 'NOTAM_DATA', payload: lastPayload.notamkv }, '*');
+                    const rawNotams = lastPayload.notamkv || {};
+                    const totalCount = Array.isArray(rawNotams) ? rawNotams.length : Object.keys(rawNotams).length;
+
+                    notamFrame.contentWindow.postMessage({ 
+                        type: 'NOTAM_DATA', 
+                        payload: rawNotams,
+                        totalCount: totalCount
+                    }, '*');
                 }
             }
             return;
@@ -310,7 +323,7 @@
         if (needed < 100) return;
 
         var maxH = Math.floor(window.innerHeight * 0.28);
-        var h = Math.min(Math.max(needed, 110), maxH);
+        var h = Math.min(Math.max(needed, 100), maxH);
 
         pane.style.height = h + 'px';
         pane.style.minHeight = h + 'px';
@@ -377,7 +390,6 @@
                 }
             }, 400);
             
-            // Push data down if frame reloads
             if (lastPayload) {
                 broadcastData(lastPayload);
             }
