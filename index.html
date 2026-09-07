@@ -122,15 +122,16 @@
             gap: 6px;
         }
 
+        /* Increased height to fit 2 full METAR lines on smaller screens */
         .metar-pane {
-            height: 135px !important;
-            min-height: 135px !important;
+            height: 160px !important;
+            min-height: 160px !important;
             flex-shrink: 0 !important;
         }
 
         .taf-pane {
-            height: 100px !important;
-            min-height: 100px !important;
+            height: 95px !important;
+            min-height: 95px !important;
             flex-shrink: 0 !important;
         }
 
@@ -278,7 +279,6 @@
             tafFrame.contentWindow.postMessage({ type: 'WEATHER_DATA', payload: payload.metarkv }, '*');
         }
         if (notamFrame && notamFrame.contentWindow) {
-            // Count total items array if present or calculate keys count
             const rawNotams = payload.notamkv || {};
             const totalCount = Array.isArray(rawNotams) ? rawNotams.length : Object.keys(rawNotams).length;
             
