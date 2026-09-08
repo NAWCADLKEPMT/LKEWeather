@@ -564,14 +564,23 @@
         }
 
         list.sort(function (a, b) {
-            var aStart = new Date(a.start).getTime() || 0;
-            var bStart = new Date(b.start).getTime() || 0;
-            var aActive = aStart <= now ? 0 : 1;
-            var bActive = bStart <= now ? 0 : 1;
-            if (aActive !== bActive) return aActive - bActive;
-            var aIssued = new Date(a.issued || a.start).getTime() || 0;
-            var bIssued = new Date(b.issued || b.start).getTime() || 0;
-            return bIssued - aIssued;
+            var aStart = new Date(a.start).getTime();
+            var bStart = new Date(b.start).getTime();
+            
+            var aHasValidStart = !isNaN(aStart);
+            var bHasValidStart = !isNaN(bStart);
+            
+            var aActive = (aHasValidStart && aStart <= now) ? 0 : 1;
+            var bActive = (bHasValidStart && bStart <= now) ? 0 : 1;
+            
+            if (aActive !== bActive) {
+                return aActive - bActive; // active first, scheduled second
+            }
+            
+            if (!aHasValidStart) aStart = Number.MAX_SAFE_INTEGER;
+            if (!bHasValidStart) bStart = Number.MAX_SAFE_INTEGER;
+            
+            return aStart - bStart; // earliest effective start first
         });
 
         return list;
