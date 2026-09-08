@@ -5,18 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <style>
         :root {
-            --panel-header-h: 32px;
+            --panel-header-h: 28px;
             --progress-h: 3px;
-            --table-header-h: 22px;
+            --table-header-h: 18px;
 
-            --row-h: 66px;
+            --row-h: 60px;
             --row-gap-border: 1px;
             --rows-visible: 3;
 
             --table-body-h: calc((var(--row-h) * var(--rows-visible)) + (var(--row-gap-border) * 2));
             --table-area-h: calc(var(--table-header-h) + var(--table-body-h));
 
-            --text-box-h: 32px;
+            --text-box-h: 28px;
 
             --shell-bg: #e9ecef;
             --header-bg: #d1d5db;
@@ -54,10 +54,10 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 10px;
-            padding: 3px 10px;
+            gap: 6px;
+            padding: 2px 8px;
             background: var(--header-bg);
-            border-bottom: 2px solid var(--border-mid);
+            border-bottom: 1px solid var(--border-mid);
             flex: 0 0 var(--panel-header-h);
             min-height: var(--panel-header-h);
             max-height: var(--panel-header-h);
@@ -67,7 +67,7 @@
         .header-left {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             min-width: 0;
             flex: 1 1 auto;
         }
@@ -79,34 +79,35 @@
             background: #f59e0b;
             color: #1c1917;
             font-weight: 900;
-            font-size: 13px;
-            letter-spacing: 1px;
-            padding: 2px 7px;
+            font-size: 12px;
+            letter-spacing: 0.8px;
+            padding: 1px 6px;
             border-radius: 4px;
-            line-height: 1.1;
+            line-height: 1;
             flex-shrink: 0;
         }
 
         .location-chip {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 900;
             color: #1f2937;
-            letter-spacing: 0.8px;
+            letter-spacing: 0.5px;
             flex-shrink: 0;
+            line-height: 1;
         }
 
         .header-center {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 2px;
+            gap: 1px;
             flex: 0 0 auto;
         }
 
         .counter {
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 900;
-            letter-spacing: 0.4px;
+            letter-spacing: 0.3px;
             color: #1f2937;
             white-space: nowrap;
             line-height: 1;
@@ -115,13 +116,13 @@
         .dot-row {
             display: flex;
             align-items: center;
-            gap: 5px;
-            height: 8px;
+            gap: 4px;
+            height: 7px;
         }
 
         .dot {
-            width: 8px;
-            height: 8px;
+            width: 7px;
+            height: 7px;
             border-radius: 50%;
             background: #9ca3af;
             border: 1px solid #6b7280;
@@ -131,7 +132,7 @@
         .dot.current {
             background: #d97706;
             border-color: #b45309;
-            transform: scale(1.3);
+            transform: scale(1.2);
         }
 
         .header-right {
@@ -143,10 +144,10 @@
         }
 
         .fetched-label {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
             color: #4b5563;
-            letter-spacing: 0.2px;
+            letter-spacing: 0.1px;
             white-space: nowrap;
             line-height: 1;
         }
@@ -209,13 +210,13 @@
         .notam-table th {
             background: var(--header-bg);
             color: #374151;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 800;
-            letter-spacing: 0.7px;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
             text-align: left;
-            padding: 2px 8px;
-            border-bottom: 2px solid #adb5bd;
+            padding: 1px 6px;
+            border-bottom: 1px solid #adb5bd;
             white-space: nowrap;
             height: var(--table-header-h);
             min-height: var(--table-header-h);
@@ -251,7 +252,7 @@
 
         .notam-table td {
             vertical-align: middle;
-            padding: 2px 8px;
+            padding: 1px 6px;
             height: var(--row-h);
             min-height: var(--row-h);
             max-height: var(--row-h);
@@ -261,12 +262,12 @@
         .col-id    { width: 11%; }
         .col-start { width: 14%; }
         .col-end   { width: 14%; }
-        .col-text  { width: 61%; padding: 2px 10px !important; }
+        .col-text  { width: 61%; padding: 1px 8px !important; }
 
         .id-container {
             display: flex;
             flex-direction: column;
-            gap: 2px;
+            gap: 1px;
             align-items: flex-start;
             justify-content: center;
             height: 100%;
@@ -274,24 +275,24 @@
         }
 
         .notam-num {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 900;
             color: #0f172a;
             white-space: nowrap;
-            letter-spacing: 0.2px;
-            line-height: 1.05;
+            letter-spacing: 0.1px;
+            line-height: 1;
         }
 
         .status-chip {
-            font-size: 9px;
+            font-size: 8px;
             font-weight: 900;
-            letter-spacing: 0.6px;
-            padding: 1px 5px;
+            letter-spacing: 0.5px;
+            padding: 1px 4px;
             border-radius: 3px;
             text-transform: uppercase;
             display: inline-block;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-            line-height: 1.1;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+            line-height: 1;
         }
 
         .status-active {
@@ -310,30 +311,30 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            gap: 1px;
+            gap: 0;
             height: 100%;
             overflow: hidden;
         }
 
         .when-date-time {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 900;
             color: #0f172a;
             white-space: nowrap;
-            line-height: 1.05;
+            line-height: 1;
         }
 
         .when-time-part {
             color: #0369a1;
             font-weight: 800;
-            margin-left: 3px;
+            margin-left: 2px;
         }
 
         .when-sched {
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 700;
             color: #b45309;
-            line-height: 1.05;
+            line-height: 1;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -374,10 +375,10 @@
         }
 
         .plain-text {
-            font-size: 16px !important;
+            font-size: 14px !important;
             font-weight: 800;
             color: #0f172a;
-            line-height: 1.2;
+            line-height: 1.05;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
@@ -387,17 +388,17 @@
             width: 100%;
             margin: 0;
             padding: 0;
-            max-height: calc(2 * 1.2em);
+            max-height: calc(2 * 1.05em);
         }
 
         .marquee-mode .plain-text {
-            font-size: 16px !important;
+            font-size: 14px !important;
             display: inline-block !important;
             white-space: nowrap !important;
             width: auto !important;
             -webkit-line-clamp: unset !important;
             overflow: visible !important;
-            padding-right: 60px !important;
+            padding-right: 48px !important;
             line-height: var(--text-box-h) !important;
         }
 
@@ -411,57 +412,57 @@
             align-items: center;
             justify-content: center;
             gap: 6px;
-            padding: 16px;
+            padding: 12px;
             text-align: center;
             overflow: hidden;
         }
 
         .empty-title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 900;
             color: #15803d;
-            letter-spacing: 0.4px;
+            letter-spacing: 0.3px;
         }
 
         .empty-sub {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 700;
             color: #4b5563;
         }
 
         .error-title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 900;
             color: #b91c1c;
         }
 
         .loading-title {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 800;
             color: #4b5563;
         }
 
         @media screen and (max-width: 1100px), screen and (max-aspect-ratio: 1/1), (orientation: portrait) {
             :root {
-                --panel-header-h: 28px;
-                --table-header-h: 20px;
-                --row-h: 58px;
-                --text-box-h: 28px;
+                --panel-header-h: 24px;
+                --table-header-h: 16px;
+                --row-h: 54px;
+                --text-box-h: 24px;
             }
 
-            .notam-header { padding: 2px 6px; gap: 4px; }
-            .notam-badge { font-size: 10px; padding: 1px 4px; }
-            .location-chip { font-size: 13px; }
-            .counter { font-size: 11px; }
-            .fetched-label { font-size: 10px; }
-            .notam-table th { font-size: 9px; padding: 2px 5px; }
-            .notam-table td { padding: 2px 5px; }
-            .col-text { padding: 2px 5px !important; }
-            .notam-num { font-size: 13px; }
-            .when-date-time { font-size: 12px; }
-            .when-sched { font-size: 9px; }
-            .plain-text { font-size: 13px !important; }
-            .marquee-mode .plain-text { font-size: 13px !important; }
+            .notam-header { padding: 1px 5px; gap: 4px; }
+            .notam-badge { font-size: 9px; padding: 1px 4px; }
+            .location-chip { font-size: 12px; }
+            .counter { font-size: 10px; }
+            .fetched-label { font-size: 9px; }
+            .notam-table th { font-size: 8px; padding: 1px 4px; }
+            .notam-table td { padding: 1px 4px; }
+            .col-text { padding: 1px 5px !important; }
+            .notam-num { font-size: 12px; }
+            .when-date-time { font-size: 11px; }
+            .when-sched { font-size: 8px; }
+            .plain-text { font-size: 12px !important; }
+            .marquee-mode .plain-text { font-size: 12px !important; }
 
             .col-id { width: 14%; }
             .col-start { width: 17%; }
