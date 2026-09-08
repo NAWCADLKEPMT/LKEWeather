@@ -4,16 +4,40 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <style>
+        :root {
+            --panel-header-h: 34px;
+            --progress-h: 3px;
+            --table-header-h: 24px;
+
+            --row-h: 72px;
+            --row-gap-border: 1px;
+            --rows-visible: 3;
+
+            --table-body-h: calc((var(--row-h) * var(--rows-visible)) + (var(--row-gap-border) * 2));
+            --table-area-h: calc(var(--table-header-h) + var(--table-body-h));
+
+            --text-box-h: 38px;
+
+            --shell-bg: #e9ecef;
+            --header-bg: #d1d5db;
+            --border-mid: #9ca3af;
+            --border-light: #cbd5e1;
+        }
+
         html, body {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #e9ecef;
+            background-color: var(--shell-bg);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             box-sizing: border-box;
             color: #111827;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
         }
 
         .notam-shell {
@@ -21,9 +45,9 @@
             height: 100%;
             display: flex;
             flex-direction: column;
-            box-sizing: border-box;
-            background: #e9ecef;
+            background: var(--shell-bg);
             min-height: 0;
+            overflow: hidden;
         }
 
         .notam-header {
@@ -32,11 +56,12 @@
             justify-content: space-between;
             gap: 10px;
             padding: 4px 12px;
-            background: #d1d5db;
-            border-bottom: 2px solid #9ca3af;
-            flex-shrink: 0;
-            min-height: 34px;
-            box-sizing: border-box;
+            background: var(--header-bg);
+            border-bottom: 2px solid var(--border-mid);
+            flex: 0 0 var(--panel-header-h);
+            min-height: var(--panel-header-h);
+            max-height: var(--panel-header-h);
+            overflow: hidden;
         }
 
         .header-left {
@@ -101,6 +126,7 @@
             border: 1px solid #6b7280;
             transition: background 0.25s, transform 0.25s, border-color 0.25s;
         }
+
         .dot.current {
             background: #d97706;
             border-color: #b45309;
@@ -124,11 +150,12 @@
         }
 
         .progress-track {
-            height: 3px;
+            height: var(--progress-h);
             background: #cbd5e1;
-            flex-shrink: 0;
+            flex: 0 0 var(--progress-h);
             overflow: hidden;
         }
+
         .progress-fill {
             height: 100%;
             width: 100%;
@@ -136,39 +163,49 @@
             transform: scaleX(0);
             transform-origin: left center;
         }
+
         .progress-fill.running {
             animation: notam-progress linear forwards;
         }
+
         @keyframes notam-progress {
             from { transform: scaleX(0); }
             to   { transform: scaleX(1); }
         }
 
         .table-wrap {
-            flex: 1 1 0;
-            min-height: 0;
+            flex: 0 0 var(--table-area-h);
+            min-height: var(--table-area-h);
+            max-height: var(--table-area-h);
+            height: var(--table-area-h);
             overflow: hidden;
             display: flex;
             flex-direction: column;
             padding: 0;
-            box-sizing: border-box;
         }
 
         .notam-table {
             width: 100%;
-            height: 100%;
+            height: var(--table-area-h);
             border-collapse: collapse;
             table-layout: fixed;
             opacity: 1;
             transition: opacity 0.28s ease;
-            box-sizing: border-box;
         }
+
         .notam-table.fade {
             opacity: 0;
         }
 
+        .notam-table thead,
+        .notam-table thead tr {
+            height: var(--table-header-h);
+            min-height: var(--table-header-h);
+            max-height: var(--table-header-h);
+        }
+
         .notam-table th {
-            background: #d1d5db;
+            background: var(--header-bg);
             color: #374151;
             font-size: 12px;
             font-weight: 800;
@@ -178,58 +215,68 @@
             padding: 3px 10px;
             border-bottom: 2px solid #adb5bd;
             white-space: nowrap;
-            height: 24px;
-            box-sizing: border-box;
+            height: var(--table-header-h);
+            min-height: var(--table-header-h);
+            max-height: var(--table-header-h);
+            overflow: hidden;
+        }
+
+        .notam-table tbody {
+            height: var(--table-body-h);
+            min-height: var(--table-body-h);
+            max-height: var(--table-body-h);
         }
 
         .notam-table tbody tr {
-            height: 92px;
-            min-height: 92px;
-            max-height: 92px;
-            border-bottom: 1px solid #cbd5e1;
-            box-sizing: border-box;
+            height: var(--row-h);
+            min-height: var(--row-h);
+            max-height: var(--row-h);
+            border-bottom: 1px solid var(--border-light);
         }
+
         .notam-table tbody tr:last-child {
             border-bottom: none;
         }
+
         .notam-table tbody tr.item-row:nth-child(even) {
             background-color: #f1f5f9;
         }
+
         .notam-table tbody tr.empty-filler-row {
             background-color: transparent;
         }
 
         .notam-table td {
             vertical-align: middle;
-            padding: 3px 10px;
-            box-sizing: border-box;
-            height: 92px;
+            padding: 2px 10px;
+            height: var(--row-h);
+            min-height: var(--row-h);
+            max-height: var(--row-h);
             overflow: hidden;
         }
 
-        /* Column widths */
         .col-id    { width: 11%; }
         .col-start { width: 14%; }
         .col-end   { width: 14%; }
-        
-        .col-text { 
-            width: 61%; 
-            padding: 3px 12px !important;
-            height: 100%;
-        }
+        .col-text  { width: 61%; padding: 2px 12px !important; }
 
         .id-container {
             display: flex;
             flex-direction: column;
             gap: 3px;
             align-items: flex-start;
+            justify-content: center;
+            height: 100%;
+            overflow: hidden;
         }
+
         .notam-num {
             font-size: 17px;
             font-weight: 900;
             color: #0f172a;
             white-space: nowrap;
             letter-spacing: 0.2px;
+            line-height: 1.1;
         }
 
         .status-chip {
@@ -242,11 +289,13 @@
             display: inline-block;
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
+
         .status-active {
             background: #15803d;
             color: #ffffff;
             border: 1px solid #166534;
         }
+
         .status-scheduled {
             background: #0369a1;
             color: #ffffff;
@@ -256,19 +305,26 @@
         .when-cell {
             display: flex;
             flex-direction: column;
+            justify-content: center;
             gap: 1px;
+            height: 100%;
+            overflow: hidden;
         }
+
         .when-date-time {
             font-size: 16px;
             font-weight: 900;
             color: #0f172a;
             white-space: nowrap;
+            line-height: 1.1;
         }
+
         .when-time-part {
             color: #0369a1;
             font-weight: 800;
             margin-left: 3px;
         }
+
         .when-sched {
             font-size: 11px;
             font-weight: 700;
@@ -281,12 +337,13 @@
 
         .text-scroll-wrapper {
             width: 100%;
-            height: 48px;
+            height: var(--text-box-h);
+            min-height: var(--text-box-h);
+            max-height: var(--text-box-h);
             overflow: hidden;
             position: relative;
             display: flex;
             align-items: center;
-            box-sizing: border-box;
             padding: 0;
         }
 
@@ -294,7 +351,9 @@
             display: flex;
             align-items: center;
             width: 100%;
-            height: 48px;
+            height: var(--text-box-h);
+            min-height: var(--text-box-h);
+            max-height: var(--text-box-h);
             will-change: transform;
         }
 
@@ -306,12 +365,8 @@
         }
 
         @keyframes marquee-loop {
-            0% { 
-                transform: translateX(0); 
-            }
-            100% { 
-                transform: translateX(-50%); 
-            }
+            0%   { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
         }
 
         .plain-text {
@@ -339,12 +394,14 @@
             -webkit-line-clamp: unset !important;
             overflow: visible !important;
             padding-right: 60px !important;
-            line-height: 48px !important;
+            line-height: var(--text-box-h) !important;
         }
 
-        /* States */
         .empty-state, .error-state, .loading-state {
-            flex: 1;
+            width: 100%;
+            height: var(--table-area-h);
+            min-height: var(--table-area-h);
+            max-height: var(--table-area-h);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -352,23 +409,28 @@
             gap: 6px;
             padding: 16px;
             text-align: center;
+            overflow: hidden;
         }
+
         .empty-title {
             font-size: 18px;
             font-weight: 900;
             color: #15803d;
             letter-spacing: 0.4px;
         }
+
         .empty-sub {
             font-size: 13px;
             font-weight: 700;
             color: #4b5563;
         }
+
         .error-title {
             font-size: 18px;
             font-weight: 900;
             color: #b91c1c;
         }
+
         .loading-title {
             font-size: 16px;
             font-weight: 800;
@@ -376,22 +438,26 @@
         }
 
         @media screen and (max-width: 1100px), screen and (max-aspect-ratio: 1/1), (orientation: portrait) {
-            .notam-header { padding: 3px 6px; gap: 4px; min-height: 30px; }
+            :root {
+                --panel-header-h: 30px;
+                --table-header-h: 22px;
+                --row-h: 64px;
+                --text-box-h: 32px;
+            }
+
+            .notam-header { padding: 3px 6px; gap: 4px; }
             .notam-badge { font-size: 11px; padding: 1px 5px; }
             .location-chip { font-size: 14px; }
             .counter { font-size: 12px; }
             .fetched-label { font-size: 11px; }
             .notam-table th { font-size: 10px; padding: 2px 6px; }
-            .notam-table td { padding: 2px 6px; height: 82px; }
-            .notam-table tbody tr { height: 82px; min-height: 82px; max-height: 82px; }
-            .notam-table td.col-text { padding: 2px 6px !important; }
+            .notam-table td { padding: 2px 6px; }
+            .col-text { padding: 2px 6px !important; }
             .notam-num { font-size: 14px; }
             .when-date-time { font-size: 13px; }
             .plain-text { font-size: 14px !important; }
             .marquee-mode .plain-text { font-size: 14px !important; }
-            .text-scroll-wrapper { height: 40px; }
-            .marquee-track { height: 40px; }
-            .marquee-mode .plain-text { line-height: 40px !important; }
+
             .col-id { width: 14%; }
             .col-start { width: 17%; }
             .col-end { width: 17%; }
@@ -414,9 +480,11 @@
             <span class="fetched-label" id="val-fetched">Waiting for data…</span>
         </div>
     </div>
+
     <div class="progress-track">
         <div class="progress-fill" id="progress-fill"></div>
     </div>
+
     <div class="table-wrap" id="table-wrap">
         <div class="loading-state">
             <div class="loading-title">Loading active NOTAMs…</div>
@@ -473,7 +541,7 @@
                 minute: '2-digit',
                 hour12: true
             });
-            
+
             return { date: dateStr, time: timeStr, raw: dateStr + ' ' + timeStr };
         } catch (e) {
             return { date: 'Error', time: '', raw: '' };
@@ -625,7 +693,7 @@
         if (totalPages <= 1) return;
 
         restartProgress(totalPages, durationMs);
-        
+
         rotateTimer = setTimeout(function () {
             var total = Math.ceil(notams.length / PAGE_SIZE);
             if (total <= 1) return;
@@ -682,16 +750,15 @@
 
         if (isOverflowingTwoLines) {
             track.classList.add('marquee-mode');
-            
+
             var naturalWidth = firstSpan.scrollWidth;
             var clone = firstSpan.cloneNode(true);
             track.appendChild(clone);
 
             var travelSec = Math.max(10, Math.round(naturalWidth / 40));
-
             track.style.animationDuration = travelSec + 's';
             track.classList.add('running');
-            
+
             return (travelSec * 1000) + INITIAL_PAUSE_MS;
         }
         return 0;
@@ -713,12 +780,14 @@
             { cls: 'col-end',   label: 'Effective End' },
             { cls: 'col-text',  label: 'Details / Text' }
         ];
+
         for (var h = 0; h < headers.length; h++) {
             var th = document.createElement('th');
             th.className = headers[h].cls;
             th.textContent = headers[h].label;
             hr.appendChild(th);
         }
+
         thead.appendChild(hr);
         table.appendChild(thead);
 
@@ -774,12 +843,14 @@
             endDt.className = 'when-date-time';
             endDt.innerHTML = endFmt.date + (endFmt.time ? '<span class="when-time-part">' + endFmt.time + '</span>' : '');
             endBox.appendChild(endDt);
+
             if (item.schedule) {
                 var sch = document.createElement('span');
                 sch.className = 'when-sched';
                 sch.textContent = item.schedule;
                 endBox.appendChild(sch);
             }
+
             tdEnd.appendChild(endBox);
             row.appendChild(tdEnd);
 
@@ -817,7 +888,8 @@
     function updateHeader(pageIndex, totalPages) {
         document.getElementById('val-location').textContent = locationCode;
         var totalMessages = notams.length;
-        document.getElementById('val-counter').textContent = 'PAGE ' + (pageIndex + 1) + ' / ' + totalPages + ' (' + totalMessages + ' MESSAGES)';
+        document.getElementById('val-counter').textContent =
+            'PAGE ' + (pageIndex + 1) + ' / ' + totalPages + ' (' + totalMessages + ' MESSAGES)';
 
         if (fetchedAtIso) {
             document.getElementById('val-fetched').textContent = formatFetched(fetchedAtIso);
@@ -837,7 +909,7 @@
         var applyContent = function() {
             populatePageTable(pageItems);
             updateHeader(currentPage, totalPages);
-            
+
             setTimeout(function() {
                 var tracks = document.querySelectorAll('.marquee-track');
                 var maxMarqueeMs = 0;
