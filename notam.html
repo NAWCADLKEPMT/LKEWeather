@@ -183,7 +183,9 @@
         }
 
         .notam-table tbody tr {
-            height: 33.333%;
+            height: 92px;
+            min-height: 92px;
+            max-height: 92px;
             border-bottom: 1px solid #cbd5e1;
             box-sizing: border-box;
         }
@@ -201,6 +203,8 @@
             vertical-align: middle;
             padding: 3px 10px;
             box-sizing: border-box;
+            height: 92px;
+            overflow: hidden;
         }
 
         /* Column widths */
@@ -277,7 +281,7 @@
 
         .text-scroll-wrapper {
             width: 100%;
-            height: 100%;
+            height: 48px;
             overflow: hidden;
             position: relative;
             display: flex;
@@ -290,6 +294,7 @@
             display: flex;
             align-items: center;
             width: 100%;
+            height: 48px;
             will-change: transform;
         }
 
@@ -323,6 +328,7 @@
             width: 100%;
             margin: 0;
             padding: 0;
+            max-height: calc(2 * 1.25em);
         }
 
         .marquee-mode .plain-text {
@@ -333,6 +339,7 @@
             -webkit-line-clamp: unset !important;
             overflow: visible !important;
             padding-right: 60px !important;
+            line-height: 48px !important;
         }
 
         /* States */
@@ -375,12 +382,16 @@
             .counter { font-size: 12px; }
             .fetched-label { font-size: 11px; }
             .notam-table th { font-size: 10px; padding: 2px 6px; }
-            .notam-table td { padding: 2px 6px; }
+            .notam-table td { padding: 2px 6px; height: 82px; }
+            .notam-table tbody tr { height: 82px; min-height: 82px; max-height: 82px; }
             .notam-table td.col-text { padding: 2px 6px !important; }
             .notam-num { font-size: 14px; }
             .when-date-time { font-size: 13px; }
             .plain-text { font-size: 14px !important; }
             .marquee-mode .plain-text { font-size: 14px !important; }
+            .text-scroll-wrapper { height: 40px; }
+            .marquee-track { height: 40px; }
+            .marquee-mode .plain-text { line-height: 40px !important; }
             .col-id { width: 14%; }
             .col-start { width: 17%; }
             .col-end { width: 17%; }
@@ -566,21 +577,21 @@
         list.sort(function (a, b) {
             var aStart = new Date(a.start).getTime();
             var bStart = new Date(b.start).getTime();
-            
+
             var aHasValidStart = !isNaN(aStart);
             var bHasValidStart = !isNaN(bStart);
-            
+
             var aActive = (aHasValidStart && aStart <= now) ? 0 : 1;
             var bActive = (bHasValidStart && bStart <= now) ? 0 : 1;
-            
+
             if (aActive !== bActive) {
-                return aActive - bActive; // active first, scheduled second
+                return aActive - bActive;
             }
-            
+
             if (!aHasValidStart) aStart = Number.MAX_SAFE_INTEGER;
             if (!bHasValidStart) bStart = Number.MAX_SAFE_INTEGER;
-            
-            return aStart - bStart; // earliest effective start first
+
+            return aStart - bStart;
         });
 
         return list;
@@ -718,7 +729,6 @@
             var row = document.createElement('tr');
             row.className = 'item-row';
 
-            // Column 1: ID & Status
             var tdId = document.createElement('td');
             tdId.className = 'col-id';
             var idContainer = document.createElement('div');
@@ -743,7 +753,6 @@
             tdId.appendChild(idContainer);
             row.appendChild(tdId);
 
-            // Column 2: Effective Start
             var startFmt = formatEasternTime(item.start);
             var tdStart = document.createElement('td');
             tdStart.className = 'col-start';
@@ -756,7 +765,6 @@
             tdStart.appendChild(startBox);
             row.appendChild(tdStart);
 
-            // Column 3: Effective End
             var endFmt = formatEasternTime(item.end);
             var tdEnd = document.createElement('td');
             tdEnd.className = 'col-end';
@@ -775,7 +783,6 @@
             tdEnd.appendChild(endBox);
             row.appendChild(tdEnd);
 
-            // Column 4: Text Details
             var tdText = document.createElement('td');
             tdText.className = 'col-text';
             var scrollWrapper = document.createElement('div');
@@ -809,8 +816,6 @@
 
     function updateHeader(pageIndex, totalPages) {
         document.getElementById('val-location').textContent = locationCode;
-        
-        // Displaying Page Numbers and Total Messages Count
         var totalMessages = notams.length;
         document.getElementById('val-counter').textContent = 'PAGE ' + (pageIndex + 1) + ' / ' + totalPages + ' (' + totalMessages + ' MESSAGES)';
 
