@@ -92,8 +92,10 @@
     }
 
     .notam-pane {
-        height: 232px;
-        min-height: 232px;
+        height: 212px;
+        min-height: 212px;
+        max-height: 212px;
+        flex: 0 0 212px;
         flex-shrink: 0;
         background-color: #0f172a;
     }
@@ -122,7 +124,6 @@
             gap: 6px;
         }
 
-        /* Increased height to fit 2 full METAR lines on smaller screens */
         .metar-pane {
             height: 160px !important;
             min-height: 160px !important;
@@ -155,18 +156,16 @@
             gap: 6px;
         }
 
-        /* Lightning panel dynamically shrinks to make room */
         .lightning-pane {
             flex: 1 1 0% !important;
             min-height: 80px !important;
         }
 
-        /* NOTAM panel set to 210px to accommodate 3 rows without vertical clipping */
         .notam-pane {
-            height: 210px !important;
-            min-height: 210px !important;
-            max-height: 210px !important;
-            flex: 0 0 210px !important;
+            height: 190px !important;
+            min-height: 190px !important;
+            max-height: 190px !important;
+            flex: 0 0 190px !important;
             flex-shrink: 0 !important;
         }
     }
@@ -175,17 +174,14 @@
  <body>
 
  <div class="dashboard-container">
-   <!-- Top METAR Panel -->
    <div class="pane metar-pane">
     <iframe id="metar-frame" src="metar.html" title="METAR Display"></iframe>
    </div>
 
-   <!-- Horizontal TAF Strip (under METAR) -->
    <div class="pane taf-pane">
     <iframe id="taf-frame" src="taf.html" title="Hourly TAF Forecast"></iframe>
    </div>
 
-   <!-- Main Viewports: Radar | Lightning & Traffic + NOTAMs -->
    <div class="main-content-grid">
     <div class="pane radar-pane">
         <iframe id="radar-frame" src="https://radar.weather.gov/?settings=v1_eyJhZ2VuZGEiOnsiaWQiOiJuYXRpb25hbCIsImNlbnRlciI6Wy03NC43MjUsNDAuMTY1XSwibG9jYXRpb24iOm51bGwsInpvb20iOjcuODU4MjEyNTg3NTk4NzUzLCJsYXllciI6ImJyZWZfcWNkIn0sImFuaW1hdGluZyI6dHJ1ZSwiYmFzZSI6InN0YW5kYXJkIiwiYXJ0Y2MiOmZhbHNlLCJjb3VudHkiOmZhbHNlLCJjd2EiOmZhbHNlLCJyZmMiOmZhbHNlLCJzdGF0ZSI6dHJ1ZSwibWVudSI6dHJ1ZSwic2hvcnRGdXNlZE9ubHkiOnRydWUsIm9wYWNpdHkiOnsiYWxlcnRzIjowLjgsImxvY2FsIjowLjYsImxvY2FsU3RhdGlvbnMiOjAuOCwibmF0aW9uYWwiOjAuODl9fQ%3D%3D" title="NOAA Radar Viewport"></iframe>
@@ -202,7 +198,7 @@
  </div>
 
  <script>
-    const REFRESH_MS = 300000; // 5 minutes
+    const REFRESH_MS = 300000;
     var cycleStart = Date.now();
     
     const API_KEY = 'jfklaF@JQFjaf4fRQ$F#j43i4F$QA0vs0433V$#JVa!@#klawefFR$&0';
@@ -290,7 +286,6 @@
         }
     }
 
-    // Handle frame readiness requests
     window.addEventListener('message', function (event) {
         if (!event.data) return;
 
@@ -329,7 +324,6 @@
         pane.style.minHeight = h + 'px';
     });
 
-    // Auto-load cached data immediately on startup if present
     (function initCache() {
         var cached = localStorage.getItem('cached_dashboard_payload');
         if (cached) {
